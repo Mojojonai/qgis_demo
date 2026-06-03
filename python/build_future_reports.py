@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import html
 import subprocess
 from dataclasses import dataclass
@@ -41,6 +42,53 @@ class TownProfile:
     investor_opportunity_score: float = 0
     investment_lane: str = ""
     missing_needs: list[str] | None = None
+
+
+@dataclass
+class StatewideTownProfile:
+    town: str
+    name: str
+    county_fips: str
+    county_subdivision_fips: str
+    acs_population: int
+    median_household_income: float
+    pct_zero_vehicle_households: float
+    pct_below_poverty: float
+    pct_65_plus: float
+    pct_with_disability: float
+    households: int
+    zero_vehicle_households: int
+    population_below_poverty: int
+    population_65_plus: int
+    population_with_disability: int
+    future_livability_score: float = 0
+    investor_opportunity_score: float = 0
+    essential_needs_score: float = 0
+    affordability_stability_score: float = 0
+    demographic_pressure_score: float = 0
+    market_scale_score: float = 0
+    future_lane: str = ""
+    missing_needs: list[str] | None = None
+
+
+MAINE_COUNTIES = {
+    "001": "Androscoggin",
+    "003": "Aroostook",
+    "005": "Cumberland",
+    "007": "Franklin",
+    "009": "Hancock",
+    "011": "Kennebec",
+    "013": "Knox",
+    "015": "Lincoln",
+    "017": "Oxford",
+    "019": "Penobscot",
+    "021": "Piscataquis",
+    "023": "Sagadahoc",
+    "025": "Somerset",
+    "027": "Waldo",
+    "029": "Washington",
+    "031": "York",
+}
 
 
 def value(row: dict[str, Any], key: str, default: Any = 0) -> Any:
@@ -223,6 +271,154 @@ def score_profiles(profiles: list[TownProfile]) -> None:
         )
         p.investment_lane = investment_lane(p)
         p.missing_needs = missing_needs(p)
+
+
+def fetch_statewide_profiles(cfg: dict[str, Any]) -> list[StatewideTownProfile]:
+    data = rows(cfg, """
+        SELECT
+            town,
+            name,
+            county_fips,
+            county_subdivision_fips,
+            total_population AS acs_population,
+            median_household_income,
+            pct_zero_vehicle_households,
+            pct_below_poverty,
+            pct_65_plus,
+            pct_with_disability,
+            households,
+            zero_vehicle_households,
+            population_below_poverty,
+            population_65_plus,
+            population_with_disability
+        FROM acs_town_demographics
+        WHERE total_population IS NOT NULL
+          AND total_population > 0
+        ORDER BY town, county_fips;
+    """)
+    profiles = [
+        StatewideTownProfile(
+            town=row["town"],
+            name=row["name"],
+            county_fips=row["county_fips"],
+            county_subdivision_fips=row["county_subdivision_fips"],
+            acs_population=int(value(row, "acs_population")),
+            median_household_income=float(value(row, "median_household_income")),
+            pct_zero_vehicle_households=float(value(row, "pct_zero_vehicle_households")),
+            pct_below_poverty=float(value(row, "pct_below_poverty")),
+            pct_65_plus=float(value(row, "pct_65_plus")),
+            pct_with_disability=float(value(row, "pct_with_disability")),
+            households=int(value(row, "households")),
+            zero_vehicle_households=int(value(row, "zero_vehicle_households")),
+            population_below_poverty=int(value(row, "population_below_poverty")),
+            population_65_plus=int(value(row, "population_65_plus")),
+            population_with_disability=int(value(row, "population_with_disability")),
+        )
+        for row in data
+    ]
+    score_statewide_profiles(profiles)
+    return profiles
+
+
+def county_name(profile: StatewideTownProfile) -> str:
+    return MAINE_COUNTIES.get(profile.county_fips, profile.county_fips)
+
+
+def statewide_missing_needs(profile: StatewideTownProfile) -> list[str]:
+    needs: list[str] = []
+    if profile.pct_below_poverty >= 12:
+        needs.append("affordable housing, workforce stability, and anti-displacement support")
+    if profile.pct_zero_vehicle_households >= 8:
+        needs.append("reliable non-car transportation, local services, and car-light housing")
+    if profile.pct_65_plus >= 28:
+        needs.append("age-friendly housing, home care, clinics, and senior transportation")
+    if profile.pct_with_disability >= 16:
+        needs.append("accessible housing, ADA routes, paratransit, and healthcare coordination")
+    if profile.median_household_income < 60000:
+        needs.append("higher-wage job access and local workforce development")
+    if profile.acs_population < 1500:
+        needs.append("regional shared services and connectivity to larger service hubs")
+    if profile.acs_population >= 15000 and profile.pct_zero_vehicle_households >= 5:
+        needs.append("dense mixed-use housing and frequent local mobility options")
+    if not needs:
+        needs.append("housing supply, climate resilience, and service-capacity monitoring")
+    return needs
+
+
+def statewide_lane(profile: StatewideTownProfile) -> str:
+    if profile.acs_population >= 25000 and profile.pct_zero_vehicle_households >= 8:
+        return "urban infill, car-light rentals, local services, and workforce mobility"
+    if profile.median_household_income >= 110000 and profile.pct_65_plus >= 22:
+        return "premium age-friendly housing, health services, and high-amenity living"
+    if profile.pct_65_plus >= 30:
+        return "senior services, healthcare access, downsizing housing, and home-care businesses"
+    if profile.pct_below_poverty >= 12 or profile.pct_zero_vehicle_households >= 10:
+        return "affordable housing, mobility services, clinics, and workforce support"
+    if profile.acs_population >= 10000:
+        return "balanced residential growth, local retail, and commuter/workforce services"
+    if profile.acs_population < 1500:
+        return "rural resilience, regional service hubs, trades, broadband, and small-scale housing"
+    return "selective housing, local services, outdoor economy, and community infrastructure"
+
+
+def score_statewide_profiles(profiles: list[StatewideTownProfile]) -> None:
+    incomes = [p.median_household_income for p in profiles]
+    populations = [p.acs_population for p in profiles]
+    for p in profiles:
+        income_score = normalize(p.median_household_income, incomes)
+        population_score = normalize(p.acs_population, populations)
+        poverty_stability = clamp(100 - p.pct_below_poverty * 4)
+        vehicle_stability = clamp(100 - p.pct_zero_vehicle_households * 3)
+        disability_stability = clamp(100 - p.pct_with_disability * 2)
+        age_balance = clamp(100 - abs(p.pct_65_plus - 20) * 2.5)
+        service_demand = clamp(
+            p.pct_zero_vehicle_households * 3
+            + p.pct_below_poverty * 3
+            + p.pct_65_plus * 1.25
+            + p.pct_with_disability * 1.25
+        )
+        p.affordability_stability_score = round(
+            0.35 * income_score
+            + 0.30 * poverty_stability
+            + 0.20 * vehicle_stability
+            + 0.15 * disability_stability,
+            2,
+        )
+        p.demographic_pressure_score = round(service_demand, 2)
+        p.market_scale_score = round(population_score, 2)
+        p.future_livability_score = round(
+            0.28 * income_score
+            + 0.24 * poverty_stability
+            + 0.16 * vehicle_stability
+            + 0.14 * disability_stability
+            + 0.10 * age_balance
+            + 0.08 * population_score,
+            2,
+        )
+        p.investor_opportunity_score = round(
+            0.28 * service_demand
+            + 0.22 * population_score
+            + 0.20 * (100 - p.affordability_stability_score)
+            + 0.15 * income_score
+            + 0.15 * clamp(p.pct_65_plus * 2),
+            2,
+        )
+        if p.acs_population < 500:
+            p.investor_opportunity_score = round(p.investor_opportunity_score * 0.62, 2)
+        elif p.acs_population < 1500:
+            p.investor_opportunity_score = round(p.investor_opportunity_score * 0.75, 2)
+        elif p.acs_population < 5000:
+            p.investor_opportunity_score = round(p.investor_opportunity_score * 0.88, 2)
+        p.essential_needs_score = round(
+            0.30 * service_demand
+            + 0.25 * (100 - poverty_stability)
+            + 0.20 * (100 - vehicle_stability)
+            + 0.15 * (100 - disability_stability)
+            + 0.10 * clamp(p.pct_65_plus * 2),
+            2,
+        )
+        p.future_lane = statewide_lane(p)
+        p.missing_needs = statewide_missing_needs(p)
 
 
 def markdown_table(headers: list[str], rows_: list[list[Any]]) -> str:
@@ -425,6 +621,219 @@ def build_needs_markdown(profiles: list[TownProfile]) -> str:
     ])
 
 
+def build_statewide_main_markdown(profiles: list[StatewideTownProfile], cfg: dict[str, Any]) -> str:
+    livability = sorted(profiles, key=lambda p: p.future_livability_score, reverse=True)
+    opportunity = sorted(profiles, key=lambda p: p.investor_opportunity_score, reverse=True)
+    needs = sorted(profiles, key=lambda p: p.essential_needs_score, reverse=True)
+    focus_names = set(cfg.get("acs", {}).get("focus_towns", []))
+    focus = [p for p in profiles if p.town in focus_names]
+    live_rows = [
+        [
+            rank,
+            p.town,
+            county_name(p),
+            fmt(p.future_livability_score),
+            f"${fmt(p.median_household_income)}",
+            f"{fmt(p.pct_below_poverty)}%",
+            f"{fmt(p.pct_zero_vehicle_households)}%",
+            f"{fmt(p.pct_65_plus)}%",
+            p.future_lane,
+        ]
+        for rank, p in enumerate(livability[:40], start=1)
+    ]
+    opportunity_rows = [
+        [
+            rank,
+            p.town,
+            county_name(p),
+            fmt(p.investor_opportunity_score),
+            fmt(p.essential_needs_score),
+            fmt(p.acs_population),
+            f"{fmt(p.pct_65_plus)}%",
+            f"{fmt(p.pct_with_disability)}%",
+            p.future_lane,
+        ]
+        for rank, p in enumerate(opportunity[:40], start=1)
+    ]
+    needs_rows = [
+        [
+            rank,
+            p.town,
+            county_name(p),
+            fmt(p.essential_needs_score),
+            f"{fmt(p.pct_below_poverty)}%",
+            f"{fmt(p.pct_zero_vehicle_households)}%",
+            f"{fmt(p.pct_65_plus)}%",
+            f"{fmt(p.pct_with_disability)}%",
+            "; ".join(p.missing_needs or []),
+        ]
+        for rank, p in enumerate(needs[:40], start=1)
+    ]
+    focus_rows = [
+        [
+            p.town,
+            county_name(p),
+            fmt(p.future_livability_score),
+            fmt(p.investor_opportunity_score),
+            fmt(p.essential_needs_score),
+            fmt(p.acs_population),
+            f"${fmt(p.median_household_income)}",
+            p.future_lane,
+        ]
+        for p in sorted(focus, key=lambda item: item.town)
+    ]
+    return "\n".join([
+        "# Maine Statewide Future Livability And Investment Screening Report",
+        "",
+        "## Bottom Line",
+        "",
+        f"- Maine places analyzed: **{len(profiles)}** ACS county subdivisions.",
+        f"- Top statewide livability screen: **{livability[0].town}**, {county_name(livability[0])} County.",
+        f"- Top statewide opportunity screen: **{opportunity[0].town}**, {county_name(opportunity[0])} County.",
+        f"- Highest essential-needs pressure screen: **{needs[0].town}**, {county_name(needs[0])} County.",
+        "- This statewide report is ACS-only. It is good for screening all Maine towns, but it does not yet include parcel prices, zoning, flood risk, broadband, school quality, crime, GTFS service, or local tax data.",
+        "",
+        "## How To Read This Like A Visionary Realtor Or Investor",
+        "",
+        "- Future livability favors stronger income, lower poverty, lower zero-car vulnerability, lower disability pressure, balanced age structure, and enough population scale for services.",
+        "- Investor opportunity favors larger population, higher service demand, aging demand, income capacity, and visible unmet needs; tiny places are downweighted so the ranking better reflects practical market scale.",
+        "- Essential-needs pressure highlights towns where American households may need more affordability, mobility, healthcare, senior services, accessibility, or workforce support.",
+        "",
+        "## Top 40 Future Livability Screens",
+        "",
+        markdown_table(
+            ["Rank", "Town", "County", "Livability", "Median Income", "Poverty", "Zero-Car HH", "Age 65+", "Best-Fit Lane"],
+            live_rows,
+        ),
+        "",
+        "## Top 40 Investor / Opportunity Screens",
+        "",
+        markdown_table(
+            ["Rank", "Town", "County", "Opportunity", "Needs Pressure", "Population", "Age 65+", "Disability", "Opportunity Lane"],
+            opportunity_rows,
+        ),
+        "",
+        "## Top 40 Missing-Needs Screens",
+        "",
+        markdown_table(
+            ["Rank", "Town", "County", "Needs Pressure", "Poverty", "Zero-Car HH", "Age 65+", "Disability", "Likely Missing Needs"],
+            needs_rows,
+        ),
+        "",
+        "## Focus Towns Mentioned For Review",
+        "",
+        markdown_table(
+            ["Town", "County", "Livability", "Opportunity", "Needs Pressure", "Population", "Median Income", "Best-Fit Lane"],
+            focus_rows,
+        ),
+        "",
+        "## What This Adds To The Project",
+        "",
+        "The earlier reports answer detailed Greater Portland mobility questions. This statewide layer answers a different first-pass question: where in Maine should someone look if they care about future living quality, investment opportunity, or unmet community needs?",
+        "",
+        source_block(),
+        "",
+    ])
+
+
+def build_statewide_focus_markdown(profiles: list[StatewideTownProfile], cfg: dict[str, Any]) -> str:
+    focus_names = set(cfg.get("acs", {}).get("focus_towns", []))
+    focus = [p for p in profiles if p.town in focus_names]
+    rows_ = [
+        [
+            p.town,
+            county_name(p),
+            fmt(p.future_livability_score),
+            fmt(p.investor_opportunity_score),
+            fmt(p.essential_needs_score),
+            f"${fmt(p.median_household_income)}",
+            f"{fmt(p.pct_zero_vehicle_households)}%",
+            f"{fmt(p.pct_below_poverty)}%",
+            f"{fmt(p.pct_65_plus)}%",
+            "; ".join(p.missing_needs or []),
+        ]
+        for p in sorted(focus, key=lambda item: item.town)
+    ]
+    return "\n".join([
+        "# Maine Focus Town Comparison",
+        "",
+        "This report compares the towns the user specifically named or has already used in the prototype.",
+        "",
+        markdown_table(
+            ["Town", "County", "Livability", "Opportunity", "Needs Pressure", "Median Income", "Zero-Car HH", "Poverty", "Age 65+", "Missing Needs"],
+            rows_,
+        ),
+        "",
+    ])
+
+
+def build_statewide_needs_markdown(profiles: list[StatewideTownProfile]) -> str:
+    rows_ = [
+        [
+            rank,
+            p.town,
+            county_name(p),
+            fmt(p.essential_needs_score),
+            fmt(p.investor_opportunity_score),
+            fmt(p.acs_population),
+            f"{fmt(p.pct_below_poverty)}%",
+            f"{fmt(p.pct_zero_vehicle_households)}%",
+            f"{fmt(p.pct_65_plus)}%",
+            f"{fmt(p.pct_with_disability)}%",
+            "; ".join(p.missing_needs or []),
+        ]
+        for rank, p in enumerate(sorted(profiles, key=lambda item: item.essential_needs_score, reverse=True), start=1)
+    ]
+    return "\n".join([
+        "# Maine Statewide Missing Needs Matrix",
+        "",
+        "All Maine ACS county subdivisions ranked by essential-needs pressure.",
+        "",
+        markdown_table(
+            ["Rank", "Town", "County", "Needs Pressure", "Opportunity", "Population", "Poverty", "Zero-Car HH", "Age 65+", "Disability", "Likely Missing Needs"],
+            rows_,
+        ),
+        "",
+    ])
+
+
+def write_statewide_csv(path: Path, profiles: list[StatewideTownProfile]) -> None:
+    fields = [
+        "town",
+        "county",
+        "acs_population",
+        "future_livability_score",
+        "investor_opportunity_score",
+        "essential_needs_score",
+        "median_household_income",
+        "pct_below_poverty",
+        "pct_zero_vehicle_households",
+        "pct_65_plus",
+        "pct_with_disability",
+        "future_lane",
+        "missing_needs",
+    ]
+    with path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fields)
+        writer.writeheader()
+        for p in sorted(profiles, key=lambda item: item.future_livability_score, reverse=True):
+            writer.writerow({
+                "town": p.town,
+                "county": county_name(p),
+                "acs_population": p.acs_population,
+                "future_livability_score": p.future_livability_score,
+                "investor_opportunity_score": p.investor_opportunity_score,
+                "essential_needs_score": p.essential_needs_score,
+                "median_household_income": p.median_household_income,
+                "pct_below_poverty": p.pct_below_poverty,
+                "pct_zero_vehicle_households": p.pct_zero_vehicle_households,
+                "pct_65_plus": p.pct_65_plus,
+                "pct_with_disability": p.pct_with_disability,
+                "future_lane": p.future_lane,
+                "missing_needs": "; ".join(p.missing_needs or []),
+            })
+
+
 def build_html_document(markdown: str, title: str) -> str:
     sections: list[str] = []
     lines = markdown.splitlines()
@@ -545,6 +954,7 @@ def write_reports(config_path: str = "configs/project.toml", pdf: bool = False) 
     ensure_directories(cfg)
     reports_dir = resolve_path(cfg, "reports_dir")
     profiles = fetch_profiles(cfg)
+    statewide_profiles = fetch_statewide_profiles(cfg)
 
     outputs: list[Path] = []
     artifacts = {
@@ -552,17 +962,24 @@ def write_reports(config_path: str = "configs/project.toml", pdf: bool = False) 
         "visionary_realtor_investor_brief": build_brief_markdown(profiles),
         "town_future_scorecards": build_scorecards_markdown(profiles),
         "town_missing_needs_matrix": build_needs_markdown(profiles),
+        "maine_statewide_livability_investment_report": build_statewide_main_markdown(statewide_profiles, cfg),
+        "maine_focus_town_comparison": build_statewide_focus_markdown(statewide_profiles, cfg),
+        "maine_statewide_missing_needs_matrix": build_statewide_needs_markdown(statewide_profiles),
     }
     for stem, markdown in artifacts.items():
         md_path = reports_dir / f"{stem}.md"
         md_path.write_text(markdown, encoding="utf-8")
         outputs.append(md_path)
-        if stem == "future_livability_investment_report":
+        if stem in {"future_livability_investment_report", "maine_statewide_livability_investment_report"}:
             html_path = reports_dir / f"{stem}.html"
-            html_path.write_text(build_html_document(markdown, "Future Livability and Investment Report"), encoding="utf-8")
+            title = "Maine Statewide Livability and Investment Report" if stem.startswith("maine_") else "Future Livability and Investment Report"
+            html_path.write_text(build_html_document(markdown, title), encoding="utf-8")
             outputs.append(html_path)
             if pdf:
                 outputs.append(export_pdf(html_path))
+    csv_path = reports_dir / "maine_statewide_town_rankings.csv"
+    write_statewide_csv(csv_path, statewide_profiles)
+    outputs.append(csv_path)
     return outputs
 
 

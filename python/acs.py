@@ -90,7 +90,8 @@ def table_url(cfg: dict[str, Any], table: str) -> str:
 
 def find_target_geographies(cfg: dict[str, Any]) -> dict[str, dict[str, str]]:
     acs = cfg["acs"]
-    target_towns = {town.lower(): town for town in acs["towns"]}
+    target_names = acs.get("towns") or acs.get("focus_towns")
+    target_towns = {town.lower(): town for town in target_names} if target_names and acs.get("scope") != "state" else {}
     targets: dict[str, dict[str, str]] = {}
     with request_text(geography_url(cfg)) as fh:
         header = fh.readline().strip().split("|")
@@ -99,24 +100,29 @@ def find_target_geographies(cfg: dict[str, Any]) -> dict[str, dict[str, str]]:
             row = dict(zip(header, values))
             if row.get("SUMLEVEL") != "060":
                 continue
-            if row.get("STATE") != acs["state"] or row.get("COUNTY") != acs["county"]:
+            if row.get("STATE") != acs["state"]:
+                continue
+            if acs.get("county") and row.get("COUNTY") != acs["county"]:
                 continue
             town = clean_town_name(row.get("NAME", ""))
-            if town.lower() not in target_towns:
+            if target_towns and town.lower() not in target_towns:
                 continue
             targets[row["GEO_ID"]] = {
                 "geoid": row["GEO_ID"],
-                "town": target_towns[town.lower()],
+                "town": target_towns.get(town.lower(), town),
                 "name": row["NAME"],
                 "state_fips": row.get("STATE", ""),
                 "county_fips": row.get("COUNTY", ""),
                 "county_subdivision_fips": row.get("COUSUB", ""),
             }
-            if len(targets) == len(target_towns):
+            if target_towns and len(targets) == len(target_towns):
                 break
-    missing = sorted(set(target_towns.values()) - {row["town"] for row in targets.values()})
-    if missing:
-        raise RuntimeError(f"Missing ACS county-subdivision geographies for: {', '.join(missing)}")
+    if target_towns:
+        missing = sorted(set(target_towns.values()) - {row["town"] for row in targets.values()})
+        if missing:
+            raise RuntimeError(f"Missing ACS county-subdivision geographies for: {', '.join(missing)}")
+    if not targets:
+        raise RuntimeError("No ACS county-subdivision geographies matched the configured scope.")
     return targets
 
 
@@ -315,12 +321,15 @@ def main() -> None:
     parser.add_argument("--config", default="configs/project.toml")
     args = parser.parse_args()
     records = run_acs_load(args.config)
+    print(f"Loaded {len(records)} ACS county-subdivision records.")
+    focus_towns = set(load_config(args.config).get("acs", {}).get("focus_towns", []))
     for record in records:
-        print(
-            f"{record['town']}: population {record['total_population']}, "
-            f"zero-car households {record['pct_zero_vehicle_households']}%, "
-            f"poverty {record['pct_below_poverty']}%"
-        )
+        if record["town"] in focus_towns:
+            print(
+                f"{record['town']}: population {record['total_population']}, "
+                f"zero-car households {record['pct_zero_vehicle_households']}%, "
+                f"poverty {record['pct_below_poverty']}%"
+            )
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ reports/*.pdf
 reports/*.png
 !reports/transit_accessibility_report.pdf
 !reports/future_livability_investment_report.pdf
+!reports/maine_statewide_livability_investment_report.pdf
 !reports/transit_accessibility_map.pdf
 !reports/transit_accessibility_map.png
 qgis/*.qgz

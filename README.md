@@ -1,8 +1,8 @@
 # Transit Accessibility and Spatial Equity Analysis
 
-Portfolio-quality GIS/data engineering project for Greater Portland, Maine.
+Portfolio-quality GIS/data engineering project for Greater Portland and statewide Maine town screening.
 
-The workflow combines public spatial data, ACS demographics, Python ETL, PostgreSQL/PostGIS, spatial SQL analysis, QGIS/PyQGIS map automation, and automated reporting.
+The workflow combines public spatial data, statewide ACS demographics, Python ETL, PostgreSQL/PostGIS, spatial SQL analysis, QGIS/PyQGIS map automation, and automated reporting.
 
 ## Architecture
 
@@ -28,7 +28,7 @@ The first build uses live public ArcGIS REST sources where available:
 - Transit routes: GPCOG Greater Portland Transit Routes.
 - Sidewalks: GPCOG/PACTS Region Sidewalks.
 - Study area: GPCOG/PACTS Study Area.
-- Demographics: U.S. Census Bureau ACS 2024 5-year table-based Summary File county subdivisions.
+- Demographics: U.S. Census Bureau ACS 2024 5-year table-based Summary File county subdivisions for Maine.
 
 For layers not yet found in the GPCOG open data catalog, the ETL creates clearly marked synthetic sample records so the full PostGIS analysis and QGIS workflow can run end-to-end. Those layers are neighborhoods, schools, and hospitals.
 
@@ -79,6 +79,12 @@ Report outputs:
 - `reports/visionary_realtor_investor_brief.md`
 - `reports/town_future_scorecards.md`
 - `reports/town_missing_needs_matrix.md`
+- `reports/maine_statewide_livability_investment_report.html`
+- `reports/maine_statewide_livability_investment_report.pdf`
+- `reports/maine_statewide_livability_investment_report.md`
+- `reports/maine_focus_town_comparison.md`
+- `reports/maine_statewide_missing_needs_matrix.md`
+- `reports/maine_statewide_town_rankings.csv`
 - `reports/transit_accessibility_map.pdf`
 - `reports/transit_accessibility_map.png`
 
@@ -102,6 +108,8 @@ The SQL in `sql/02_analysis.sql` implements:
 ## Future Livability And Investment Reports
 
 `python/build_future_reports.py` builds a screening report suite for future living, real-estate, infrastructure, and local-service opportunity questions. It ranks towns by future livability and investor opportunity, then summarizes the missing needs that matter for housing, mobility, healthcare, aging, disability access, and workforce-support planning.
+
+The Greater Portland report keeps the detailed accessibility metrics from the PostGIS/QGIS prototype. The statewide Maine report uses ACS county-subdivision indicators for every populated Maine town and city, including focus places such as Kennebunk, Brunswick, Hollis, Cumberland, Portland, South Portland, Westbrook, Falmouth, Scarborough, and Gorham.
 
 ## QGIS Automation
 
