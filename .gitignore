@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.pyc
+
+data/raw/
+data/processed/
+logs/
+reports/*.pdf
+reports/*.png
+qgis/*.qgz
+qgis/*.qgs
+
+.env
+configs/database.env
+
+# Local Word documentation artifacts and generators
+docs/*documentation*.docx
+docs/*documentation*.pdf
+docs/rendered_process_documentation/
+python/build_process_documentation.py
+tools/

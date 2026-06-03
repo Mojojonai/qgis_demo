@@ -1,0 +1,78 @@
+[database]
+host = "localhost"
+port = 5764
+database = "transit_accessibility"
+user = "postgres"
+password = "admin"
+
+[paths]
+data_dir = "data"
+raw_dir = "data/raw"
+processed_dir = "data/processed"
+reports_dir = "reports"
+logs_dir = "logs"
+
+[arcgis]
+page_size = 2000
+timeout_seconds = 60
+
+[qgis]
+prefix_path = 'C:\Program Files\QGIS 3.44.11'
+qgis_bin = 'C:\Program Files\QGIS 3.44.11\bin\qgis-ltr-bin.exe'
+
+[[sources]]
+key = "transit_stops"
+table = "transit_stops"
+loader = "arcgis_geojson"
+url = "https://services3.arcgis.com/0UEH6aSHSRlnunGR/arcgis/rest/services/Greater_Portland_Transit_Stop_Inventory/FeatureServer/0"
+geometry_type = "Point"
+fallback = "synthetic"
+source_note = "GPCOG Greater Portland Transit Stop Inventory."
+
+[[sources]]
+key = "transit_routes"
+table = "transit_routes"
+loader = "arcgis_geojson"
+url = "https://services3.arcgis.com/0UEH6aSHSRlnunGR/arcgis/rest/services/Greater_Portland_Transit_Routes/FeatureServer/34"
+geometry_type = "MultiLineString"
+fallback = "synthetic"
+source_note = "GPCOG Greater Portland Transit Routes."
+
+[[sources]]
+key = "sidewalks"
+table = "sidewalks"
+loader = "arcgis_geojson"
+url = "https://services3.arcgis.com/0UEH6aSHSRlnunGR/arcgis/rest/services/PACTS_Region_Sidewalks/FeatureServer/0"
+geometry_type = "MultiLineString"
+fallback = "synthetic"
+source_note = "GPCOG/PACTS Region Sidewalks."
+
+[[sources]]
+key = "study_area"
+table = "study_area"
+loader = "arcgis_geojson"
+url = "https://services3.arcgis.com/0UEH6aSHSRlnunGR/arcgis/rest/services/PACTS_Study_Area/FeatureServer/0"
+geometry_type = "MultiPolygon"
+fallback = "synthetic"
+source_note = "GPCOG/PACTS Study Area."
+
+[[sources]]
+key = "neighborhoods"
+table = "neighborhoods"
+loader = "synthetic"
+geometry_type = "MultiPolygon"
+source_note = "Synthetic block-group-like neighborhoods for first-run analysis."
+
+[[sources]]
+key = "schools"
+table = "schools"
+loader = "synthetic"
+geometry_type = "Point"
+source_note = "Synthetic school points for first-run analysis."
+
+[[sources]]
+key = "hospitals"
+table = "hospitals"
+loader = "synthetic"
+geometry_type = "Point"
+source_note = "Synthetic hospital points for first-run analysis."

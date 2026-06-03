@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Transit Accessibility and Spatial Equity Analysis</title>
+  <style>
+    :root {
+      --ink: #1f2933;
+      --muted: #5f6b7a;
+      --line: #d7dde5;
+      --blue: #0f5fa8;
+      --green: #3b7f4f;
+      --gold: #b7791f;
+      --red: #a83838;
+      --paper: #ffffff;
+      --soft: #f4f7fb;
+    }
+    @page { size: Letter; margin: 0.55in; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--paper);
+      line-height: 1.45;
+    }
+    .cover {
+      border-bottom: 3px solid var(--blue);
+      padding: 12px 0 18px;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-size: 30px;
+      margin: 0 0 8px;
+      letter-spacing: 0;
+    }
+    h2 {
+      font-size: 18px;
+      margin: 24px 0 8px;
+      color: var(--blue);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 4px;
+    }
+    h3 {
+      font-size: 14px;
+      margin: 16px 0 6px;
+      color: var(--ink);
+    }
+    p, li {
+      font-size: 11.5px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .metric {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 10px;
+    }
+    .metric .label {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    .metric .value {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 10.5px;
+      margin: 8px 0 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 6px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #e9f0f7;
+      color: #102a43;
+    }
+    tr:nth-child(even) td {
+      background: #fbfcfe;
+    }
+    .map {
+      width: 100%;
+      border: 1px solid var(--line);
+      margin-top: 8px;
+    }
+    .callout {
+      border-left: 4px solid var(--gold);
+      background: #fff8e8;
+      padding: 8px 10px;
+      margin: 10px 0;
+    }
+    .risk {
+      border-left-color: var(--red);
+      background: #fff1f1;
+    }
+    .page-break {
+      break-before: page;
+    }
+    footer {
+      color: var(--muted);
+      font-size: 9px;
+      margin-top: 24px;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <h1>Transit Accessibility and Spatial Equity Analysis</h1>
+    <p class="subtitle">Greater Portland, Maine | PostgreSQL/PostGIS, Python ETL, Spatial SQL, QGIS Automation</p>
+    <p class="subtitle">Generated 2026-06-03 07:56:25 from the local PostGIS database on port 5764.</p>
+  </section>
+
+  <section class="meta">
+    <div class="metric"><div class="label">Transit Stops</div><div class="value">982</div></div>
+    <div class="metric"><div class="label">Transit Routes</div><div class="value">416</div></div>
+    <div class="metric"><div class="label">Sidewalk Segments</div><div class="value">10,670</div></div>
+    <div class="metric"><div class="label">Neighborhood Units</div><div class="value">7</div></div>
+  </section>
+
+  <h2>Executive Summary</h2>
+  <p>
+    This project evaluates transit accessibility and spatial equity across a first-run Greater Portland analysis area.
+    The pipeline downloads public GPCOG transit, route, sidewalk, and study-area layers, loads them into PostGIS,
+    runs spatial SQL, and exports a QGIS map and report-ready findings.
+  </p>
+  <p>The 800-meter transit stop buffer covers about 50,939 residents (69.12%) across the current neighborhood sample, leaving 22,761 residents outside that access band.</p>
+  <div class="callout risk">
+    <p>
+      Important interpretation note: neighborhoods, schools, and hospitals are currently synthetic sample records.
+      They keep the end-to-end workflow operational while verified public Census and facility datasets are added.
+      Treat the workflow, SQL, and cartographic automation as production structure, and treat current neighborhood-level
+      scores as demonstration values until those layers are replaced.
+    </p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3>Strongest Accessibility Scores</h3>
+      <table><thead><tr><th>Neighborhood</th><th>Population</th><th>Score</th><th>Transit</th><th>Sidewalk</th><th>School</th><th>Hospital</th><th>Nearest Stop m</th></tr></thead><tbody><tr><td>Portland Peninsula</td><td>18,000</td><td>91.25</td><td>100</td><td>100</td><td>69.23</td><td>74.02</td><td>122.21</td></tr>
+<tr><td>South Portland Waterfront</td><td>13,500</td><td>72.27</td><td>100</td><td>71.29</td><td>43.58</td><td>21.66</td><td>77.41</td></tr>
+<tr><td>Westbrook Core</td><td>11,800</td><td>64.44</td><td>100</td><td>16.35</td><td>97.69</td><td>0</td><td>39.46</td></tr></tbody></table>
+    </div>
+    <div>
+      <h3>Lowest Accessibility Scores</h3>
+      <table><thead><tr><th>Neighborhood</th><th>Population</th><th>Score</th><th>Transit</th><th>Sidewalk</th><th>School</th><th>Hospital</th><th>Nearest Stop m</th></tr></thead><tbody><tr><td>Gorham Center</td><td>7,800</td><td>29.58</td><td>70</td><td>5.25</td><td>0</td><td>0</td><td>731.30</td></tr>
+<tr><td>East Deering</td><td>7,200</td><td>31.51</td><td>70</td><td>11.70</td><td>0</td><td>0</td><td>416.32</td></tr>
+<tr><td>Scarborough North</td><td>9,000</td><td>36.46</td><td>70</td><td>28.20</td><td>0</td><td>0</td><td>716.90</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <h2>Map Output</h2>
+  <p>
+    The map was generated from PostGIS layers using the QGIS Python API. It includes transit routes, stops, sidewalks,
+    schools, hospitals, study-area boundaries, graduated accessibility-score polygons, legend, scale bar, and north arrow.
+  </p>
+  <img class="map" src="transit_accessibility_map.png" alt="Transit accessibility map">
+
+  <h2 class="page-break">Spatial Analysis Results</h2>
+  <h3>Transit Coverage Buffers</h3>
+  <table><thead><tr><th>Buffer</th><th>Population Inside</th><th>Population Outside</th><th>Percent Covered</th></tr></thead><tbody><tr><td>400 m</td><td>33,577</td><td>40,123</td><td>45.56%</td></tr>
+<tr><td>800 m</td><td>50,939</td><td>22,761</td><td>69.12%</td></tr></tbody></table>
+
+  <h3>Accessibility Scores</h3>
+  <table><thead><tr><th>Neighborhood</th><th>Population</th><th>Accessibility</th><th>Transit</th><th>Sidewalk</th><th>School</th><th>Hospital</th><th>Nearest Stop m</th></tr></thead><tbody><tr><td>Portland Peninsula</td><td>18,000</td><td>91.25</td><td>100</td><td>100</td><td>69.23</td><td>74.02</td><td>122.21</td></tr>
+<tr><td>South Portland Waterfront</td><td>13,500</td><td>72.27</td><td>100</td><td>71.29</td><td>43.58</td><td>21.66</td><td>77.41</td></tr>
+<tr><td>Westbrook Core</td><td>11,800</td><td>64.44</td><td>100</td><td>16.35</td><td>97.69</td><td>0</td><td>39.46</td></tr>
+<tr><td>Falmouth Foreside</td><td>6,400</td><td>52.13</td><td>100</td><td>27.58</td><td>19.27</td><td>0</td><td>169.19</td></tr>
+<tr><td>Scarborough North</td><td>9,000</td><td>36.46</td><td>70</td><td>28.20</td><td>0</td><td>0</td><td>716.90</td></tr>
+<tr><td>East Deering</td><td>7,200</td><td>31.51</td><td>70</td><td>11.70</td><td>0</td><td>0</td><td>416.32</td></tr>
+<tr><td>Gorham Center</td><td>7,800</td><td>29.58</td><td>70</td><td>5.25</td><td>0</td><td>0</td><td>731.30</td></tr></tbody></table>
+
+  <h3>Underserved Area Ranking</h3>
+  <table><thead><tr><th>Rank</th><th>Neighborhood</th><th>Score</th><th>Nearest Stop m</th><th>Score Below 40</th><th>Farther Than 800 m</th></tr></thead><tbody><tr><td>1</td><td>Gorham Center</td><td>29.58</td><td>731.30</td><td>1</td><td>0</td></tr>
+<tr><td>2</td><td>East Deering</td><td>31.51</td><td>416.32</td><td>1</td><td>0</td></tr>
+<tr><td>3</td><td>Scarborough North</td><td>36.46</td><td>716.90</td><td>1</td><td>0</td></tr></tbody></table>
+
+  <h2>Methods</h2>
+  <p>
+    The database uses geometry columns in EPSG:4326 and transforms geometries to EPSG:26919 for meter-based analysis.
+    Transit stop buffers are created with <strong>ST_Buffer</strong> and dissolved with <strong>ST_Union</strong>.
+    Population coverage is estimated by intersecting neighborhood polygons with 400-meter and 800-meter buffers.
+    Nearest stop and facility distances are calculated from neighborhood centroids with projected
+    <strong>ST_Distance</strong> measures and KNN-style ordering.
+  </p>
+  <p>
+    The accessibility score is a weighted index from 0 to 100:
+    40 percent transit access, 30 percent sidewalk access, 20 percent school access, and 10 percent hospital access.
+    Underserved neighborhoods are flagged when the score is below 40, the nearest stop is more than 800 meters away,
+    or the polygon is outside the 800-meter transit buffer.
+  </p>
+
+  <h2>Technical Summary</h2>
+  <table><thead><tr><th>Layer</th><th>Records</th></tr></thead><tbody><tr><td>Hospitals</td><td>3</td></tr>
+<tr><td>Neighborhoods</td><td>7</td></tr>
+<tr><td>Schools</td><td>5</td></tr>
+<tr><td>Sidewalk segments</td><td>10,670</td></tr>
+<tr><td>Study-area polygons</td><td>17</td></tr>
+<tr><td>Transit routes</td><td>416</td></tr>
+<tr><td>Transit stops</td><td>982</td></tr></tbody></table>
+  <p><strong>PostGIS version:</strong> POSTGIS=&quot;3.6.2 3.6.2&quot; [EXTENSION] PGSQL=&quot;170&quot; GEOS=&quot;3.14.1dev-CAPI-1.20.4&quot; PROJ=&quot;8.2.1 NETWORK_ENABLED=OFF URL_ENDPOINT= USER_WRITABLE_DIRECTORY=C:\WINDOWS\ServiceProfiles\NetworkService\AppData\Local/proj&quot; (compiled against PROJ 8.2.1) LIBXML=&quot;2.12.5&quot; LIBJSON=&quot;0.12&quot; LIBPROTOBUF=&quot;1.2.1&quot; WAGYU=&quot;0.5.0 (Internal)&quot; TOPOLOGY</p>
+  <p>
+    Key SQL artifacts: <code>coverage_buffers</code>, <code>coverage_summary</code>,
+    <code>nearest_transit_stop</code>, <code>neighborhood_sidewalk_access</code>,
+    <code>accessibility_scores</code>, <code>underserved_areas</code>, and
+    <code>neighborhood_accessibility_map</code>.
+  </p>
+
+  <h2>Recommendations</h2>
+  <ul>
+    <li>Replace synthetic neighborhoods with Census block groups and ACS demographic attributes.</li>
+    <li>Add verified public school and healthcare-facility sources before presenting equity findings as authoritative.</li>
+    <li>Use the underserved ranking to prioritize candidate corridors for additional stop placement or service-frequency review.</li>
+    <li>Add demographic overlays, including income, age, disability, and vehicle access, to deepen the equity interpretation.</li>
+  </ul>
+
+  <footer>
+    Transit Accessibility and Spatial Equity Analysis for Greater Portland, Maine. Built with Python, PostgreSQL/PostGIS, spatial SQL, and QGIS automation.
+  </footer>
+</body>
+</html>
