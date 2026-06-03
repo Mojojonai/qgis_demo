@@ -1,0 +1,12 @@
+# Missing Needs Matrix
+
+| Town | Need Index | Dominant Driver | Missing Needs | Potential Opportunity Lane |
+| --- | --- | --- | --- | --- |
+| Gorham | 26.96 | Access gap | stronger transit access or last-mile mobility; more usable transit service/frequency; sidewalk connectivity and safer walk-to-stop routes; healthcare access, local clinics, or medical shuttle service; school/youth access and family-service proximity; foundational access investment before dense growth | value-add mobility, workforce housing, clinics, and town-center infrastructure |
+| Scarborough | 25.6 | Access gap | stronger transit access or last-mile mobility; more usable transit service/frequency; sidewalk connectivity and safer walk-to-stop routes; healthcare access, local clinics, or medical shuttle service; school/youth access and family-service proximity; age-friendly housing, healthcare access, and senior mobility; foundational access investment before dense growth | age-friendly housing, healthcare services, and premium suburban living |
+| Falmouth | 20.79 | Access gap | stronger transit access or last-mile mobility; sidewalk connectivity and safer walk-to-stop routes; healthcare access, local clinics, or medical shuttle service; school/youth access and family-service proximity; age-friendly housing, healthcare access, and senior mobility | age-friendly housing, healthcare services, and premium suburban living |
+| Westbrook | 17.98 | Access gap | sidewalk connectivity and safer walk-to-stop routes; healthcare access, local clinics, or medical shuttle service; accessible housing, ADA routes, and paratransit coordination | transit-proximate housing and main-street redevelopment |
+| Portland | 17.5 | Access gap | school/youth access and family-service proximity; car-light housing and reliable non-car mobility; affordable/workforce housing and anti-displacement support; accessible housing, ADA routes, and paratransit coordination | urban mixed-use, car-light rentals, small business, and workforce services |
+| South Portland | 16.37 | Access gap | healthcare access, local clinics, or medical shuttle service; age-friendly housing, healthcare access, and senior mobility; accessible housing, ADA routes, and paratransit coordination | balanced residential, commuter-friendly housing, and local services |
+
+Use this as a screening matrix for housing, mobility, healthcare, local-service, and infrastructure opportunities.

@@ -62,11 +62,23 @@ To build the interactive mobility dashboard:
 python python\build_dashboard.py --config configs\project.toml
 ```
 
+To build the future livability and investment report suite:
+
+```powershell
+python python\build_future_reports.py --config configs\project.toml --pdf
+```
+
 Report outputs:
 
 - `reports/transit_accessibility_report.html`
 - `reports/transit_accessibility_report.pdf`
 - `reports/mobility_insecurity_dashboard.html`
+- `reports/future_livability_investment_report.html`
+- `reports/future_livability_investment_report.pdf`
+- `reports/future_livability_investment_report.md`
+- `reports/visionary_realtor_investor_brief.md`
+- `reports/town_future_scorecards.md`
+- `reports/town_missing_needs_matrix.md`
 - `reports/transit_accessibility_map.pdf`
 - `reports/transit_accessibility_map.png`
 
@@ -86,6 +98,10 @@ The SQL in `sql/02_analysis.sql` implements:
 ## Interactive Dashboard
 
 `python/build_dashboard.py` exports a standalone browser dashboard with MapLibre GL JS, deck.gl, and Apache ECharts. It includes an interactive Mobility Need Index map, town and analysis-unit filters, KPI cards, all-town charts, tooltips, and a full KPI table.
+
+## Future Livability And Investment Reports
+
+`python/build_future_reports.py` builds a screening report suite for future living, real-estate, infrastructure, and local-service opportunity questions. It ranks towns by future livability and investor opportunity, then summarizes the missing needs that matter for housing, mobility, healthcare, aging, disability access, and workforce-support planning.
 
 ## QGIS Automation
 
