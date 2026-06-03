@@ -1,0 +1,470 @@
+[
+  {
+    "geoid": "0600000US2300524495",
+    "town": "Falmouth",
+    "name": "Falmouth town, Cumberland County, Maine",
+    "state_fips": "23",
+    "county_fips": "005",
+    "county_subdivision_fips": "24495",
+    "acs_year": 2024,
+    "total_population": 12755,
+    "median_household_income": 150919,
+    "poverty_universe": 12541,
+    "population_below_poverty": 288,
+    "pct_below_poverty": 2.3,
+    "households": 4989,
+    "zero_vehicle_households": 254,
+    "pct_zero_vehicle_households": 5.09,
+    "population_65_plus": 3121,
+    "pct_65_plus": 24.47,
+    "disability_universe": 12571,
+    "population_with_disability": 1070,
+    "pct_with_disability": 8.51,
+    "raw_properties": {
+      "geography": {
+        "geoid": "0600000US2300524495",
+        "town": "Falmouth",
+        "name": "Falmouth town, Cumberland County, Maine",
+        "state_fips": "23",
+        "county_fips": "005",
+        "county_subdivision_fips": "24495"
+      },
+      "tables": {
+        "B01003": {
+          "B01003_E001": 12755
+        },
+        "B01001": {
+          "B01001_E045": 188,
+          "B01001_E025": 180,
+          "B01001_E022": 322,
+          "B01001_E024": 231,
+          "B01001_E021": 120,
+          "B01001_E046": 503,
+          "B01001_E023": 223,
+          "B01001_E020": 190,
+          "B01001_E047": 376,
+          "B01001_E049": 326,
+          "B01001_E048": 220,
+          "B01001_E044": 242
+        },
+        "B17001": {
+          "B17001_E001": 12541,
+          "B17001_E002": 288
+        },
+        "B18101": {
+          "B18101_E016": 75,
+          "B18101_E001": 12571,
+          "B18101_E019": 195,
+          "B18101_E026": 36,
+          "B18101_E004": 0,
+          "B18101_E023": 14,
+          "B18101_E032": 105,
+          "B18101_E013": 229,
+          "B18101_E038": 242,
+          "B18101_E035": 56,
+          "B18101_E029": 29,
+          "B18101_E007": 60,
+          "B18101_E010": 29
+        },
+        "B19013": {
+          "B19013_E001": 150919
+        },
+        "B25044": {
+          "B25044_E003": 225,
+          "B25044_E001": 4989,
+          "B25044_E010": 29
+        }
+      }
+    }
+  },
+  {
+    "geoid": "0600000US2300528240",
+    "town": "Gorham",
+    "name": "Gorham town, Cumberland County, Maine",
+    "state_fips": "23",
+    "county_fips": "005",
+    "county_subdivision_fips": "28240",
+    "acs_year": 2024,
+    "total_population": 18300,
+    "median_household_income": 112312,
+    "poverty_universe": 16615,
+    "population_below_poverty": 617,
+    "pct_below_poverty": 3.71,
+    "households": 6636,
+    "zero_vehicle_households": 273,
+    "pct_zero_vehicle_households": 4.11,
+    "population_65_plus": 3201,
+    "pct_65_plus": 17.49,
+    "disability_universe": 18185,
+    "population_with_disability": 1998,
+    "pct_with_disability": 10.99,
+    "raw_properties": {
+      "geography": {
+        "geoid": "0600000US2300528240",
+        "town": "Gorham",
+        "name": "Gorham town, Cumberland County, Maine",
+        "state_fips": "23",
+        "county_fips": "005",
+        "county_subdivision_fips": "28240"
+      },
+      "tables": {
+        "B01003": {
+          "B01003_E001": 18300
+        },
+        "B01001": {
+          "B01001_E045": 308,
+          "B01001_E025": 49,
+          "B01001_E022": 628,
+          "B01001_E024": 91,
+          "B01001_E021": 378,
+          "B01001_E046": 445,
+          "B01001_E023": 142,
+          "B01001_E020": 252,
+          "B01001_E047": 201,
+          "B01001_E049": 263,
+          "B01001_E048": 186,
+          "B01001_E044": 258
+        },
+        "B17001": {
+          "B17001_E001": 16615,
+          "B17001_E002": 617
+        },
+        "B18101": {
+          "B18101_E016": 220,
+          "B18101_E001": 18185,
+          "B18101_E019": 92,
+          "B18101_E026": 67,
+          "B18101_E004": 0,
+          "B18101_E023": 0,
+          "B18101_E032": 270,
+          "B18101_E013": 342,
+          "B18101_E038": 339,
+          "B18101_E035": 120,
+          "B18101_E029": 167,
+          "B18101_E007": 14,
+          "B18101_E010": 367
+        },
+        "B19013": {
+          "B19013_E001": 112312
+        },
+        "B25044": {
+          "B25044_E003": 76,
+          "B25044_E001": 6636,
+          "B25044_E010": 197
+        }
+      }
+    }
+  },
+  {
+    "geoid": "0600000US2300560545",
+    "town": "Portland",
+    "name": "Portland city, Cumberland County, Maine",
+    "state_fips": "23",
+    "county_fips": "005",
+    "county_subdivision_fips": "60545",
+    "acs_year": 2024,
+    "total_population": 68854,
+    "median_household_income": 79540,
+    "poverty_universe": 67363,
+    "population_below_poverty": 7553,
+    "pct_below_poverty": 11.21,
+    "households": 32965,
+    "zero_vehicle_households": 5077,
+    "pct_zero_vehicle_households": 15.4,
+    "population_65_plus": 11616,
+    "pct_65_plus": 16.87,
+    "disability_universe": 67636,
+    "population_with_disability": 8565,
+    "pct_with_disability": 12.66,
+    "raw_properties": {
+      "geography": {
+        "geoid": "0600000US2300560545",
+        "town": "Portland",
+        "name": "Portland city, Cumberland County, Maine",
+        "state_fips": "23",
+        "county_fips": "005",
+        "county_subdivision_fips": "60545"
+      },
+      "tables": {
+        "B01003": {
+          "B01003_E001": 68854
+        },
+        "B01001": {
+          "B01001_E045": 1082,
+          "B01001_E025": 453,
+          "B01001_E022": 1299,
+          "B01001_E024": 493,
+          "B01001_E021": 1260,
+          "B01001_E046": 1396,
+          "B01001_E023": 868,
+          "B01001_E020": 750,
+          "B01001_E047": 1122,
+          "B01001_E049": 1253,
+          "B01001_E048": 887,
+          "B01001_E044": 753
+        },
+        "B17001": {
+          "B17001_E001": 67363,
+          "B17001_E002": 7553
+        },
+        "B18101": {
+          "B18101_E016": 732,
+          "B18101_E001": 67636,
+          "B18101_E019": 523,
+          "B18101_E026": 69,
+          "B18101_E004": 0,
+          "B18101_E023": 28,
+          "B18101_E032": 1304,
+          "B18101_E013": 1820,
+          "B18101_E038": 1448,
+          "B18101_E035": 590,
+          "B18101_E029": 914,
+          "B18101_E007": 224,
+          "B18101_E010": 913
+        },
+        "B19013": {
+          "B19013_E001": 79540
+        },
+        "B25044": {
+          "B25044_E003": 611,
+          "B25044_E001": 32965,
+          "B25044_E010": 4466
+        }
+      }
+    }
+  },
+  {
+    "geoid": "0600000US2300566145",
+    "town": "Scarborough",
+    "name": "Scarborough town, Cumberland County, Maine",
+    "state_fips": "23",
+    "county_fips": "005",
+    "county_subdivision_fips": "66145",
+    "acs_year": 2024,
+    "total_population": 23215,
+    "median_household_income": 133558,
+    "poverty_universe": 22822,
+    "population_below_poverty": 1002,
+    "pct_below_poverty": 4.39,
+    "households": 9972,
+    "zero_vehicle_households": 167,
+    "pct_zero_vehicle_households": 1.67,
+    "population_65_plus": 5741,
+    "pct_65_plus": 24.73,
+    "disability_universe": 22841,
+    "population_with_disability": 2467,
+    "pct_with_disability": 10.8,
+    "raw_properties": {
+      "geography": {
+        "geoid": "0600000US2300566145",
+        "town": "Scarborough",
+        "name": "Scarborough town, Cumberland County, Maine",
+        "state_fips": "23",
+        "county_fips": "005",
+        "county_subdivision_fips": "66145"
+      },
+      "tables": {
+        "B01003": {
+          "B01003_E001": 23215
+        },
+        "B01001": {
+          "B01001_E045": 406,
+          "B01001_E025": 306,
+          "B01001_E022": 821,
+          "B01001_E024": 604,
+          "B01001_E021": 329,
+          "B01001_E046": 721,
+          "B01001_E023": 427,
+          "B01001_E020": 344,
+          "B01001_E047": 540,
+          "B01001_E049": 318,
+          "B01001_E048": 532,
+          "B01001_E044": 393
+        },
+        "B17001": {
+          "B17001_E001": 22822,
+          "B17001_E002": 1002
+        },
+        "B18101": {
+          "B18101_E016": 153,
+          "B18101_E001": 22841,
+          "B18101_E019": 425,
+          "B18101_E026": 77,
+          "B18101_E004": 0,
+          "B18101_E023": 0,
+          "B18101_E032": 298,
+          "B18101_E013": 336,
+          "B18101_E038": 479,
+          "B18101_E035": 107,
+          "B18101_E029": 167,
+          "B18101_E007": 181,
+          "B18101_E010": 244
+        },
+        "B19013": {
+          "B19013_E001": 133558
+        },
+        "B25044": {
+          "B25044_E003": 69,
+          "B25044_E001": 9972,
+          "B25044_E010": 98
+        }
+      }
+    }
+  },
+  {
+    "geoid": "0600000US2300571990",
+    "town": "South Portland",
+    "name": "South Portland city, Cumberland County, Maine",
+    "state_fips": "23",
+    "county_fips": "005",
+    "county_subdivision_fips": "71990",
+    "acs_year": 2024,
+    "total_population": 26930,
+    "median_household_income": 86838,
+    "poverty_universe": 26341,
+    "population_below_poverty": 1828,
+    "pct_below_poverty": 6.94,
+    "households": 12152,
+    "zero_vehicle_households": 950,
+    "pct_zero_vehicle_households": 7.82,
+    "population_65_plus": 5580,
+    "pct_65_plus": 20.72,
+    "disability_universe": 26720,
+    "population_with_disability": 3537,
+    "pct_with_disability": 13.24,
+    "raw_properties": {
+      "geography": {
+        "geoid": "0600000US2300571990",
+        "town": "South Portland",
+        "name": "South Portland city, Cumberland County, Maine",
+        "state_fips": "23",
+        "county_fips": "005",
+        "county_subdivision_fips": "71990"
+      },
+      "tables": {
+        "B01003": {
+          "B01003_E001": 26930
+        },
+        "B01001": {
+          "B01001_E045": 569,
+          "B01001_E025": 154,
+          "B01001_E022": 567,
+          "B01001_E024": 251,
+          "B01001_E021": 543,
+          "B01001_E046": 756,
+          "B01001_E023": 375,
+          "B01001_E020": 286,
+          "B01001_E047": 971,
+          "B01001_E049": 365,
+          "B01001_E048": 255,
+          "B01001_E044": 488
+        },
+        "B17001": {
+          "B17001_E001": 26341,
+          "B17001_E002": 1828
+        },
+        "B18101": {
+          "B18101_E016": 352,
+          "B18101_E001": 26720,
+          "B18101_E019": 262,
+          "B18101_E026": 19,
+          "B18101_E004": 0,
+          "B18101_E023": 0,
+          "B18101_E032": 508,
+          "B18101_E013": 512,
+          "B18101_E038": 857,
+          "B18101_E035": 315,
+          "B18101_E029": 268,
+          "B18101_E007": 172,
+          "B18101_E010": 272
+        },
+        "B19013": {
+          "B19013_E001": 86838
+        },
+        "B25044": {
+          "B25044_E003": 232,
+          "B25044_E001": 12152,
+          "B25044_E010": 718
+        }
+      }
+    }
+  },
+  {
+    "geoid": "0600000US2300582105",
+    "town": "Westbrook",
+    "name": "Westbrook city, Cumberland County, Maine",
+    "state_fips": "23",
+    "county_fips": "005",
+    "county_subdivision_fips": "82105",
+    "acs_year": 2024,
+    "total_population": 20775,
+    "median_household_income": 85038,
+    "poverty_universe": 20426,
+    "population_below_poverty": 1628,
+    "pct_below_poverty": 7.97,
+    "households": 9138,
+    "zero_vehicle_households": 548,
+    "pct_zero_vehicle_households": 6.0,
+    "population_65_plus": 3753,
+    "pct_65_plus": 18.06,
+    "disability_universe": 20565,
+    "population_with_disability": 2487,
+    "pct_with_disability": 12.09,
+    "raw_properties": {
+      "geography": {
+        "geoid": "0600000US2300582105",
+        "town": "Westbrook",
+        "name": "Westbrook city, Cumberland County, Maine",
+        "state_fips": "23",
+        "county_fips": "005",
+        "county_subdivision_fips": "82105"
+      },
+      "tables": {
+        "B01003": {
+          "B01003_E001": 20775
+        },
+        "B01001": {
+          "B01001_E045": 387,
+          "B01001_E025": 254,
+          "B01001_E022": 305,
+          "B01001_E024": 216,
+          "B01001_E021": 246,
+          "B01001_E046": 631,
+          "B01001_E023": 173,
+          "B01001_E020": 371,
+          "B01001_E047": 460,
+          "B01001_E049": 139,
+          "B01001_E048": 190,
+          "B01001_E044": 381
+        },
+        "B17001": {
+          "B17001_E001": 20426,
+          "B17001_E002": 1628
+        },
+        "B18101": {
+          "B18101_E016": 349,
+          "B18101_E001": 20565,
+          "B18101_E019": 222,
+          "B18101_E026": 41,
+          "B18101_E004": 0,
+          "B18101_E023": 0,
+          "B18101_E032": 413,
+          "B18101_E013": 353,
+          "B18101_E038": 336,
+          "B18101_E035": 190,
+          "B18101_E029": 261,
+          "B18101_E007": 147,
+          "B18101_E010": 175
+        },
+        "B19013": {
+          "B19013_E001": 85038
+        },
+        "B25044": {
+          "B25044_E003": 79,
+          "B25044_E001": 9138,
+          "B25044_E010": 469
+        }
+      }
+    }
+  }
+]

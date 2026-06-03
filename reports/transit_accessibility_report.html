@@ -135,7 +135,7 @@
   <section class="cover">
     <h1>Transit Accessibility and Spatial Equity Analysis</h1>
     <p class="subtitle">Greater Portland, Maine | PostgreSQL/PostGIS, Python ETL, Spatial SQL, QGIS Automation</p>
-    <p class="subtitle">Generated 2026-06-03 14:10:13 from the local PostGIS database on port 5764.</p>
+    <p class="subtitle">Generated 2026-06-03 16:47:13 from the local PostGIS database on port 5764.</p>
   </section>
 
   <section class="meta">
@@ -203,6 +203,33 @@
 <tr><td>Falmouth</td><td>100</td><td>27.58</td><td>19.27</td><td>0</td><td>46.29</td><td>7,232.05</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
 <tr><td>Scarborough</td><td>70</td><td>28.20</td><td>0</td><td>0</td><td>47.33</td><td>5,258.70</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
 <tr><td>Gorham</td><td>70</td><td>5.25</td><td>0</td><td>0</td><td>8.82</td><td>1,130.60</td><td>0</td><td>0</td><td>1</td><td>0</td></tr></tbody></table>
+  </div>
+
+  <h2>Mobility Need Index</h2>
+  <p>
+    The Mobility Need Index combines the accessibility gap with official ACS 5-year indicators:
+    zero-vehicle households, poverty, residents age 65 and older, and disability. Higher values indicate
+    places where weak transportation access overlaps with higher demographic need.
+  </p>
+  <h3>Town Mobility Need Ranking</h3>
+  <div class="compact">
+    <table><thead><tr><th>Rank</th><th>Town</th><th>ACS Population</th><th>Need Index</th><th>Access Score</th><th>Zero-Car HH</th><th>Poverty</th><th>Age 65+</th><th>Disability</th><th>High-Need Units</th><th>Dominant Driver</th></tr></thead><tbody><tr><td>1</td><td>Gorham</td><td>18,300</td><td>26.96</td><td>29.58</td><td>4.11%</td><td>3.71%</td><td>17.49%</td><td>10.99%</td><td>0</td><td>Access gap</td></tr>
+<tr><td>2</td><td>Scarborough</td><td>23,215</td><td>25.60</td><td>36.46</td><td>1.67%</td><td>4.39%</td><td>24.73%</td><td>10.80%</td><td>0</td><td>Access gap</td></tr>
+<tr><td>3</td><td>Falmouth</td><td>12,755</td><td>20.79</td><td>52.13</td><td>5.09%</td><td>2.30%</td><td>24.47%</td><td>8.51%</td><td>0</td><td>Access gap</td></tr>
+<tr><td>4</td><td>Westbrook</td><td>20,775</td><td>17.98</td><td>64.44</td><td>6.00%</td><td>7.97%</td><td>18.06%</td><td>12.09%</td><td>0</td><td>Access gap</td></tr>
+<tr><td>5</td><td>Portland</td><td>68,854</td><td>17.50</td><td>74.18</td><td>15.40%</td><td>11.21%</td><td>16.87%</td><td>12.66%</td><td>1</td><td>Access gap</td></tr>
+<tr><td>6</td><td>South Portland</td><td>26,930</td><td>16.37</td><td>72.27</td><td>7.82%</td><td>6.94%</td><td>20.72%</td><td>13.24%</td><td>0</td><td>Access gap</td></tr></tbody></table>
+  </div>
+
+  <h3>Analysis Unit Mobility Need Explanation</h3>
+  <div class="compact">
+    <table><thead><tr><th>Rank</th><th>Town</th><th>Analysis Unit</th><th>Need Index</th><th>Tier</th><th>Primary Driver</th><th>Access Gap</th><th>Zero-Car HH</th><th>Poverty</th><th>Age 65+</th><th>Disability</th></tr></thead><tbody><tr><td>1</td><td>Portland</td><td>East Deering</td><td>30.30</td><td>High</td><td>Access gap</td><td>68.49</td><td>15.40%</td><td>11.21%</td><td>16.87%</td><td>12.66%</td></tr>
+<tr><td>2</td><td>Gorham</td><td>Gorham Center</td><td>26.96</td><td>Elevated</td><td>Access gap</td><td>70.42</td><td>4.11%</td><td>3.71%</td><td>17.49%</td><td>10.99%</td></tr>
+<tr><td>3</td><td>Scarborough</td><td>Scarborough North</td><td>25.60</td><td>Elevated</td><td>Access gap</td><td>63.54</td><td>1.67%</td><td>4.39%</td><td>24.73%</td><td>10.80%</td></tr>
+<tr><td>4</td><td>Falmouth</td><td>Falmouth Foreside</td><td>20.79</td><td>Elevated</td><td>Access gap</td><td>47.87</td><td>5.09%</td><td>2.30%</td><td>24.47%</td><td>8.51%</td></tr>
+<tr><td>5</td><td>Westbrook</td><td>Westbrook Core</td><td>17.98</td><td>Monitor</td><td>Access gap</td><td>35.56</td><td>6.00%</td><td>7.97%</td><td>18.06%</td><td>12.09%</td></tr>
+<tr><td>6</td><td>South Portland</td><td>South Portland Waterfront</td><td>16.37</td><td>Monitor</td><td>Access gap</td><td>27.73</td><td>7.82%</td><td>6.94%</td><td>20.72%</td><td>13.24%</td></tr>
+<tr><td>7</td><td>Portland</td><td>Portland Peninsula</td><td>12.38</td><td>Monitor</td><td>Older adults</td><td>8.75</td><td>15.40%</td><td>11.21%</td><td>16.87%</td><td>12.66%</td></tr></tbody></table>
   </div>
 
   <h2>Map Output</h2>
@@ -278,7 +305,9 @@
     <code>nearest_transit_stop</code>, <code>neighborhood_sidewalk_access</code>,
     <code>accessibility_scores</code>, <code>underserved_areas</code>,
     <code>analysis_unit_accessibility_kpis</code>, <code>town_accessibility_kpis</code>, and
-    <code>neighborhood_accessibility_map</code>.
+    <code>mobility_need_index</code>, <code>town_mobility_need_index</code>, and
+    <code>neighborhood_accessibility_map</code>. ACS demographics are stored in
+    <code>acs_town_demographics</code>.
   </p>
 
   <footer>

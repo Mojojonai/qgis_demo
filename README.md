@@ -2,7 +2,7 @@
 
 Portfolio-quality GIS/data engineering project for Greater Portland, Maine.
 
-The workflow combines public spatial data, Python ETL, PostgreSQL/PostGIS, spatial SQL analysis, QGIS/PyQGIS map automation, and automated reporting.
+The workflow combines public spatial data, ACS demographics, Python ETL, PostgreSQL/PostGIS, spatial SQL analysis, QGIS/PyQGIS map automation, and automated reporting.
 
 ## Architecture
 
@@ -28,6 +28,7 @@ The first build uses live public ArcGIS REST sources where available:
 - Transit routes: GPCOG Greater Portland Transit Routes.
 - Sidewalks: GPCOG/PACTS Region Sidewalks.
 - Study area: GPCOG/PACTS Study Area.
+- Demographics: U.S. Census Bureau ACS 2024 5-year table-based Summary File county subdivisions.
 
 For layers not yet found in the GPCOG open data catalog, the ETL creates clearly marked synthetic sample records so the full PostGIS analysis and QGIS workflow can run end-to-end. Those layers are neighborhoods, schools, and hospitals.
 
@@ -45,8 +46,9 @@ This will:
 2. Create the project schema.
 3. Download/load available ArcGIS layers.
 4. Generate synthetic fallback layers.
-5. Run the spatial analysis SQL.
-6. Write a markdown executive summary to `reports/executive_summary.md`.
+5. Load ACS town demographic indicators.
+6. Run the spatial analysis SQL.
+7. Write a markdown executive summary to `reports/executive_summary.md`.
 
 To build the portfolio report after the pipeline has run:
 
@@ -79,10 +81,11 @@ The SQL in `sql/02_analysis.sql` implements:
 - Weighted accessibility score from 0 to 100.
 - Underserved area ranking.
 - Report-ready KPI tables for all towns and all analysis units.
+- ACS-backed Mobility Need Index using accessibility gap, zero-car households, poverty, age 65+, and disability.
 
 ## Interactive Dashboard
 
-`python/build_dashboard.py` exports a standalone browser dashboard with MapLibre GL JS, deck.gl, and Apache ECharts. It includes an interactive accessibility map, town and analysis-unit filters, KPI cards, all-town charts, tooltips, and a full KPI table.
+`python/build_dashboard.py` exports a standalone browser dashboard with MapLibre GL JS, deck.gl, and Apache ECharts. It includes an interactive Mobility Need Index map, town and analysis-unit filters, KPI cards, all-town charts, tooltips, and a full KPI table.
 
 ## QGIS Automation
 

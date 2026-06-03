@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from acs import run_acs_load
 from config import load_config
 from db import run_sql_file
 from etl import run_etl
@@ -28,6 +29,10 @@ def main() -> None:
     counts = run_etl(args.config, synthetic_only=args.synthetic_only)
     for key, count in counts.items():
         print(f"  {key}: {count}")
+
+    print("Loading ACS demographics...")
+    demographics = run_acs_load(args.config)
+    print(f"  towns: {len(demographics)}")
 
     print("Running spatial analysis...")
     run_sql_file(cfg, root / "sql" / "02_analysis.sql")

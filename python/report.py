@@ -103,6 +103,34 @@ def write_report(config_path: str = "configs/project.toml") -> Path:
         FROM analysis_unit_accessibility_kpis
         ORDER BY town, analysis_unit
     """)
+    mobility_towns = fetch_rows(cfg, """
+        SELECT
+            mobility_need_town_rank,
+            town,
+            acs_town_population,
+            weighted_mobility_need_index,
+            weighted_accessibility_score,
+            pct_zero_vehicle_households,
+            pct_below_poverty,
+            pct_65_plus,
+            pct_with_disability,
+            high_need_units,
+            dominant_need_driver
+        FROM town_mobility_need_index
+        ORDER BY mobility_need_town_rank
+    """)
+    mobility_units = fetch_rows(cfg, """
+        SELECT
+            mobility_need_rank,
+            town,
+            analysis_unit,
+            mobility_need_index,
+            priority_tier,
+            primary_need_driver,
+            accessibility_gap_score
+        FROM mobility_need_index
+        ORDER BY mobility_need_rank
+    """)
     coverage = fetch_rows(cfg, """
         SELECT buffer_m, population_inside, population_outside, pct_population_inside
         FROM coverage_summary
@@ -160,6 +188,27 @@ def write_report(config_path: str = "configs/project.toml") -> Path:
         f"within 800 m: {fmt(within_800m)}, score {fmt(score)}, "
         f"limiting dimension {limiting_dimension}, category {category}, underserved: {fmt(is_underserved)}"
         for town, unit, population, pct_400, pct_800, distance_m, within_800m, score, limiting_dimension, category, is_underserved in units
+    )
+    lines.extend(["", "## Mobility Need Index", ""])
+    lines.append(
+        "The Mobility Need Index combines the accessibility gap with official ACS 5-year indicators: "
+        "zero-vehicle households, poverty, residents age 65 and older, and disability."
+    )
+    lines.extend(["", "### Town Ranking", ""])
+    lines.extend(
+        "- "
+        f"{rank}. {town}: need index {fmt(need_index)}, access score {fmt(access_score)}, "
+        f"ACS population {fmt(acs_population)}, zero-car households {fmt(zero_car)}%, "
+        f"poverty {fmt(poverty)}%, age 65+ {fmt(age_65)}%, disability {fmt(disability)}%, "
+        f"high-need units {fmt(high_need_units)}, dominant driver {driver}"
+        for rank, town, acs_population, need_index, access_score, zero_car, poverty, age_65, disability, high_need_units, driver in mobility_towns
+    )
+    lines.extend(["", "### Analysis Unit Ranking", ""])
+    lines.extend(
+        "- "
+        f"{rank}. {town} / {unit}: need index {fmt(need_index)}, tier {tier}, "
+        f"primary driver {driver}, accessibility gap {fmt(access_gap)}"
+        for rank, town, unit, need_index, tier, driver, access_gap in mobility_units
     )
     lines.extend(["", "## Transit Coverage", ""])
     lines.extend(

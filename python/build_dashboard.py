@@ -54,6 +54,12 @@ def build_payload(cfg: dict[str, Any]) -> dict[str, Any]:
                 SUM(underserved_units) AS underserved_units
             FROM town_accessibility_kpis
         ),
+        need_stats AS (
+            SELECT
+                ROUND(MAX(weighted_mobility_need_index)::numeric, 2) AS highest_town_mobility_need,
+                SUM(high_need_units) AS high_need_units
+            FROM town_mobility_need_index
+        ),
         coverage_400 AS (
             SELECT population_inside, population_outside, pct_population_inside
             FROM coverage_summary
@@ -76,49 +82,70 @@ def build_payload(cfg: dict[str, Any]) -> dict[str, Any]:
             c800.pct_population_inside AS pct_pop_800m,
             ts.population_weighted_score,
             ts.avg_town_nearest_stop_m,
-            ts.underserved_units
+            ts.underserved_units,
+            ns.highest_town_mobility_need,
+            ns.high_need_units
         FROM town_stats ts
+        CROSS JOIN need_stats ns
         CROSS JOIN coverage_400 c400
         CROSS JOIN coverage_800 c800;
     """)
     towns = rows(cfg, """
         SELECT
-            town_rank,
-            town,
-            analysis_units,
-            total_population,
-            population_400m,
-            pct_pop_400m,
-            population_800m,
-            pct_pop_800m,
-            weighted_accessibility_score,
-            avg_accessibility_score,
-            min_accessibility_score,
-            max_accessibility_score,
-            avg_nearest_stop_m,
-            max_nearest_stop_m,
-            avg_transit_score,
-            avg_sidewalk_score,
-            avg_school_score,
-            avg_hospital_score,
-            sidewalk_km,
-            sidewalk_m_per_1000_residents,
-            schools_inside,
-            hospitals_inside,
-            units_within_800m,
-            units_farther_than_800m,
-            underserved_units,
-            synthetic_units
-        FROM town_accessibility_kpis
-        ORDER BY town_rank;
+            a.town_rank,
+            m.mobility_need_town_rank,
+            a.town,
+            a.analysis_units,
+            a.total_population,
+            m.acs_town_population,
+            a.population_400m,
+            a.pct_pop_400m,
+            a.population_800m,
+            a.pct_pop_800m,
+            a.weighted_accessibility_score,
+            a.avg_accessibility_score,
+            a.min_accessibility_score,
+            a.max_accessibility_score,
+            a.avg_nearest_stop_m,
+            a.max_nearest_stop_m,
+            a.avg_transit_score,
+            a.avg_sidewalk_score,
+            a.avg_school_score,
+            a.avg_hospital_score,
+            a.sidewalk_km,
+            a.sidewalk_m_per_1000_residents,
+            a.schools_inside,
+            a.hospitals_inside,
+            a.units_within_800m,
+            a.units_farther_than_800m,
+            a.underserved_units,
+            a.synthetic_units,
+            m.weighted_mobility_need_index,
+            m.max_mobility_need_index,
+            m.pct_below_poverty,
+            m.pct_zero_vehicle_households,
+            m.pct_65_plus,
+            m.pct_with_disability,
+            m.high_need_units,
+            m.dominant_need_driver
+        FROM town_accessibility_kpis a
+        JOIN town_mobility_need_index m
+            ON m.town = a.town
+        ORDER BY m.mobility_need_town_rank;
     """)
     units = rows(cfg, """
         SELECT
             accessibility_rank,
+            mobility_need_rank,
             town,
             analysis_unit,
             population,
             median_income,
+            acs_town_population,
+            pct_below_poverty,
+            pct_zero_vehicle_households,
+            pct_65_plus,
+            pct_with_disability,
             population_400m,
             pct_pop_400m,
             population_800m,
@@ -143,20 +170,32 @@ def build_payload(cfg: dict[str, Any]) -> dict[str, Any]:
             lowest_scoring_dimension,
             access_category,
             is_underserved,
-            is_synthetic
-        FROM analysis_unit_accessibility_kpis
+            is_synthetic,
+            mobility_need_index,
+            priority_tier,
+            primary_need_driver,
+            accessibility_gap_score
+        FROM mobility_need_index
         ORDER BY town, analysis_unit;
     """)
     units_geojson = feature_collection(cfg, """
         SELECT
             k.accessibility_rank,
+            k.mobility_need_rank,
             k.town,
             k.analysis_unit,
             k.population,
+            k.pct_below_poverty,
+            k.pct_zero_vehicle_households,
+            k.pct_65_plus,
+            k.pct_with_disability,
             k.pct_pop_400m,
             k.pct_pop_800m,
             k.nearest_stop_distance_m,
             k.accessibility_score,
+            k.mobility_need_index,
+            k.priority_tier,
+            k.primary_need_driver,
             k.transit_score,
             k.sidewalk_score,
             k.school_score,
@@ -165,7 +204,7 @@ def build_payload(cfg: dict[str, Any]) -> dict[str, Any]:
             k.access_category,
             k.is_underserved,
             ST_AsGeoJSON(n.geom, 6)::json AS geometry
-        FROM analysis_unit_accessibility_kpis k
+        FROM mobility_need_index k
         JOIN neighborhoods n
             ON n.id = k.neighborhood_id
         ORDER BY k.town, k.analysis_unit;
@@ -516,11 +555,11 @@ def build_html(payload: dict[str, Any]) -> str:
     <section class="panel map-panel">
       <div id="map"></div>
       <div class="legend">
-        <h3>Accessibility Score</h3>
-        <div class="legend-row"><span class="swatch" style="background:#2d9a57"></span><span>80 to 100 high access</span></div>
-        <div class="legend-row"><span class="swatch" style="background:#79b75b"></span><span>60 to 79 moderate-high</span></div>
-        <div class="legend-row"><span class="swatch" style="background:#e2b348"></span><span>40 to 59 moderate</span></div>
-        <div class="legend-row"><span class="swatch" style="background:#c84b3e"></span><span>Below 40 mobility need</span></div>
+        <h3>Mobility Need Index</h3>
+        <div class="legend-row"><span class="swatch" style="background:#8f2727"></span><span>40+ critical need</span></div>
+        <div class="legend-row"><span class="swatch" style="background:#c84b3e"></span><span>30 to 39 high need</span></div>
+        <div class="legend-row"><span class="swatch" style="background:#e2b348"></span><span>20 to 29 elevated need</span></div>
+        <div class="legend-row"><span class="swatch" style="background:#5fa45d"></span><span>Below 20 monitor</span></div>
       </div>
     </section>
 
@@ -572,13 +611,17 @@ def build_html(payload: dict[str, Any]) -> str:
             <tr>
               <th>Rank</th>
               <th>Town</th>
+              <th>Need Rank</th>
               <th>Population</th>
+              <th>ACS Population</th>
+              <th>Need Index</th>
               <th>800 m Coverage</th>
               <th>Weighted Score</th>
+              <th>Zero-Car HH</th>
+              <th>Poverty</th>
               <th>Avg Stop m</th>
-              <th>Max Stop m</th>
-              <th>Underserved Units</th>
-              <th>Sidewalk km</th>
+              <th>High-Need Units</th>
+              <th>Dominant Driver</th>
             </tr>
           </thead>
           <tbody id="townTable"></tbody>
@@ -609,6 +652,14 @@ def build_html(payload: dict[str, Any]) -> str:
       return [200, 75, 62, alpha];
     }}
 
+    function needColor(score, alpha = 205) {{
+      const s = Number(score || 0);
+      if (s >= 40) return [143, 39, 39, alpha];
+      if (s >= 30) return [200, 75, 62, alpha];
+      if (s >= 20) return [226, 179, 72, alpha];
+      return [95, 164, 93, alpha];
+    }}
+
     function filteredUnits() {{
       return payload.units.filter(unit => {{
         const townOk = selectedTown === 'All towns' || unit.town === selectedTown;
@@ -632,8 +683,8 @@ def build_html(payload: dict[str, Any]) -> str:
         ['Population', r.total_population],
         ['800 m coverage', pct(r.pct_pop_800m)],
         ['Weighted score', r.population_weighted_score],
-        ['Avg stop distance', `${{num(r.avg_town_nearest_stop_m)}} m`],
-        ['Underserved units', r.underserved_units]
+        ['Highest need', r.highest_town_mobility_need],
+        ['High-need units', r.high_need_units]
       ];
       document.getElementById('cards').innerHTML = cards.map(([label, value]) => `
         <div class="card"><div class="label">${{html(label)}}</div><div class="value">${{html(numOrText(value))}}</div></div>
@@ -672,27 +723,33 @@ def build_html(payload: dict[str, Any]) -> str:
         ['Analysis unit', unit.analysis_unit],
         ['Population', num(unit.population)],
         ['Score', num(unit.accessibility_score)],
+        ['Need index', num(unit.mobility_need_index)],
+        ['Priority tier', unit.priority_tier],
         ['Category', unit.access_category],
         ['Nearest stop', `${{num(unit.nearest_stop_distance_m)}} m`],
         ['800 m coverage', pct(unit.pct_pop_800m)],
-        ['Limiting dimension', unit.lowest_scoring_dimension],
+        ['Need driver', unit.primary_need_driver],
+        ['Zero-car households', pct(unit.pct_zero_vehicle_households)],
+        ['Poverty', pct(unit.pct_below_poverty)],
         ['Nearest route', unit.nearest_route_name || ''],
         ['Underserved', unit.is_underserved ? 'Yes' : 'No']
       ].map(([label, value]) => `<div><strong>${{html(label)}}</strong>${{html(value)}}</div>`).join('');
     }}
 
     function renderInsights() {{
+      const highestNeed = [...payload.towns].sort((a, b) => Number(b.weighted_mobility_need_index) - Number(a.weighted_mobility_need_index))[0];
       const lowestCoverage = [...payload.towns].sort((a, b) => Number(a.pct_pop_800m) - Number(b.pct_pop_800m))[0];
       const longestStop = [...payload.towns].sort((a, b) => Number(b.avg_nearest_stop_m) - Number(a.avg_nearest_stop_m))[0];
       const weakestScore = [...payload.towns].sort((a, b) => Number(a.weighted_accessibility_score) - Number(b.weighted_accessibility_score))[0];
       const strongestScore = [...payload.towns].sort((a, b) => Number(b.weighted_accessibility_score) - Number(a.weighted_accessibility_score))[0];
-      const underserved = payload.towns.filter(t => Number(t.underserved_units) > 0);
+      const highNeedUnits = payload.towns.reduce((total, town) => total + Number(town.high_need_units || 0), 0);
       document.getElementById('insights').innerHTML = [
+        ['risk', `${{html(highestNeed.town)}} has the highest Mobility Need Index at ${{num(highestNeed.weighted_mobility_need_index)}}; dominant driver: ${{html(highestNeed.dominant_need_driver)}}.`],
         ['risk', `${{html(weakestScore.town)}} has the lowest weighted accessibility score at ${{num(weakestScore.weighted_accessibility_score)}}.`],
         ['warning', `${{html(lowestCoverage.town)}} has the lowest 800 m coverage at ${{pct(lowestCoverage.pct_pop_800m)}}.`],
         ['warning', `${{html(longestStop.town)}} has the longest average nearest-stop distance at ${{num(longestStop.avg_nearest_stop_m)}} m.`],
         ['', `${{html(strongestScore.town)}} currently leads the prototype with a weighted score of ${{num(strongestScore.weighted_accessibility_score)}}.`],
-        ['', `${{underserved.length}} town(s) include at least one underserved analysis unit under the current thresholds.`]
+        ['', `${{highNeedUnits}} analysis unit(s) are high or critical priority under the ACS-backed Mobility Need Index.`]
       ].map(([kind, text]) => `<div class="insight ${{kind}}">${{text}}</div>`).join('');
     }}
 
@@ -701,13 +758,17 @@ def build_html(payload: dict[str, Any]) -> str:
         <tr data-town="${{html(t.town)}}">
           <td>${{num(t.town_rank)}}</td>
           <td>${{html(t.town)}}</td>
+          <td>${{num(t.mobility_need_town_rank)}}</td>
           <td>${{num(t.total_population)}}</td>
+          <td>${{num(t.acs_town_population)}}</td>
+          <td>${{num(t.weighted_mobility_need_index)}}</td>
           <td>${{pct(t.pct_pop_800m)}}</td>
           <td>${{num(t.weighted_accessibility_score)}}</td>
+          <td>${{pct(t.pct_zero_vehicle_households)}}</td>
+          <td>${{pct(t.pct_below_poverty)}}</td>
           <td>${{num(t.avg_nearest_stop_m)}}</td>
-          <td>${{num(t.max_nearest_stop_m)}}</td>
-          <td>${{num(t.underserved_units)}}</td>
-          <td>${{num(t.sidewalk_km)}}</td>
+          <td>${{num(t.high_need_units)}}</td>
+          <td>${{html(t.dominant_need_driver)}}</td>
         </tr>
       `).join('');
       document.querySelectorAll('#townTable tr').forEach(row => {{
@@ -759,11 +820,11 @@ def build_html(payload: dict[str, Any]) -> str:
           filled: true,
           getFillColor: f => {{
             const p = f.properties;
-            const alpha = emphasizeUnderserved && p.is_underserved ? 230 : 175;
-            return scoreColor(p.accessibility_score, alpha);
+            const alpha = emphasizeUnderserved && p.priority_tier !== 'Monitor' ? 230 : 175;
+            return needColor(p.mobility_need_index, alpha);
           }},
-          getLineColor: f => f.properties.is_underserved ? [145, 32, 32, 255] : [35, 48, 61, 170],
-          getLineWidth: f => f.properties.is_underserved ? 4 : 2,
+          getLineColor: f => f.properties.priority_tier !== 'Monitor' ? [145, 32, 32, 255] : [35, 48, 61, 170],
+          getLineWidth: f => f.properties.priority_tier !== 'Monitor' ? 4 : 2,
           lineWidthMinPixels: 1,
           onClick: info => {{
             if (info.object?.properties?.analysis_unit) {{
@@ -823,7 +884,7 @@ def build_html(payload: dict[str, Any]) -> str:
       const p = object.properties || object;
       if (p.analysis_unit) {{
         return {{
-          html: `<strong>${{html(p.analysis_unit)}}</strong><br>${{html(p.town)}}<br>Score: ${{num(p.accessibility_score)}}<br>800 m coverage: ${{pct(p.pct_pop_800m)}}<br>Nearest stop: ${{num(p.nearest_stop_distance_m)}} m`
+          html: `<strong>${{html(p.analysis_unit)}}</strong><br>${{html(p.town)}}<br>Need index: ${{num(p.mobility_need_index)}} (${{html(p.priority_tier)}})<br>Driver: ${{html(p.primary_need_driver)}}<br>Access score: ${{num(p.accessibility_score)}}<br>800 m coverage: ${{pct(p.pct_pop_800m)}}`
         }};
       }}
       if (p.stop_name) return {{ html: `<strong>${{html(p.stop_name)}}</strong><br>${{html(p.route_name || '')}}` }};
@@ -850,16 +911,16 @@ def build_html(payload: dict[str, Any]) -> str:
     function scoreChartOption() {{
       const towns = payload.towns;
       return {{
-        title: {{ text: 'Weighted Accessibility Score', left: 8, top: 0, textStyle: {{ fontSize: 13 }} }},
+        title: {{ text: 'Mobility Need Index', left: 8, top: 0, textStyle: {{ fontSize: 13 }} }},
         grid: {{ left: 42, right: 14, bottom: 58, top: 38 }},
         xAxis: {{ type: 'category', data: towns.map(t => t.town), axisLabel: {{ rotate: 35 }} }},
-        yAxis: {{ type: 'value', max: 100 }},
+        yAxis: {{ type: 'value', max: 50 }},
         tooltip: {{ trigger: 'axis' }},
         series: [{{
           type: 'bar',
           data: towns.map(t => ({{
-            value: t.weighted_accessibility_score,
-            itemStyle: {{ color: `rgba(${{scoreColor(t.weighted_accessibility_score, 255).join(',')}})` }}
+            value: t.weighted_mobility_need_index,
+            itemStyle: {{ color: `rgba(${{needColor(t.weighted_mobility_need_index, 255).join(',')}})` }}
           }}))
         }}]
       }};
@@ -909,17 +970,17 @@ def build_html(payload: dict[str, Any]) -> str:
 
     function scatterChartOption() {{
       return {{
-        title: {{ text: 'Distance vs Score', left: 8, top: 0, textStyle: {{ fontSize: 13 }} }},
+        title: {{ text: 'Distance vs Need', left: 8, top: 0, textStyle: {{ fontSize: 13 }} }},
         grid: {{ left: 45, right: 20, bottom: 42, top: 38 }},
         xAxis: {{ name: 'Avg stop m', type: 'value' }},
-        yAxis: {{ name: 'Score', type: 'value', max: 100 }},
+        yAxis: {{ name: 'Need', type: 'value', max: 50 }},
         tooltip: {{
-          formatter: params => `${{html(params.data[3])}}<br>Avg stop: ${{num(params.data[0])}} m<br>Score: ${{num(params.data[1])}}<br>Population: ${{num(params.data[2])}}`
+          formatter: params => `${{html(params.data[3])}}<br>Avg stop: ${{num(params.data[0])}} m<br>Need index: ${{num(params.data[1])}}<br>ACS population: ${{num(params.data[2])}}`
         }},
         series: [{{
           type: 'scatter',
           symbolSize: data => Math.max(8, Math.sqrt(Number(data[2] || 0)) / 12),
-          data: payload.towns.map(t => [t.avg_nearest_stop_m, t.weighted_accessibility_score, t.total_population, t.town]),
+          data: payload.towns.map(t => [t.avg_nearest_stop_m, t.weighted_mobility_need_index, t.acs_town_population, t.town]),
           itemStyle: {{ color: '#25714f', opacity: 0.78 }}
         }}]
       }};

@@ -196,6 +196,38 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
         FROM analysis_unit_accessibility_kpis
         ORDER BY town, analysis_unit;
     """)
+    mobility_towns = rows(cfg, """
+        SELECT
+            mobility_need_town_rank,
+            town,
+            acs_town_population,
+            weighted_mobility_need_index,
+            weighted_accessibility_score,
+            pct_zero_vehicle_households || '%',
+            pct_below_poverty || '%',
+            pct_65_plus || '%',
+            pct_with_disability || '%',
+            high_need_units,
+            dominant_need_driver
+        FROM town_mobility_need_index
+        ORDER BY mobility_need_town_rank;
+    """)
+    mobility_units = rows(cfg, """
+        SELECT
+            mobility_need_rank,
+            town,
+            analysis_unit,
+            mobility_need_index,
+            priority_tier,
+            primary_need_driver,
+            accessibility_gap_score,
+            pct_zero_vehicle_households || '%',
+            pct_below_poverty || '%',
+            pct_65_plus || '%',
+            pct_with_disability || '%'
+        FROM mobility_need_index
+        ORDER BY mobility_need_rank;
+    """)
 
     coverage_800 = rows(cfg, """
         SELECT population_inside, population_outside, pct_population_inside
@@ -423,6 +455,22 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
     {table(["Town", "Transit", "Sidewalk", "School", "Hospital", "Sidewalk km", "Sidewalk m/1k Pop", "Schools", "Hospitals", "Units Within 800 m", "Units Farther 800 m"], town_components)}
   </div>
 
+  <h2>Mobility Need Index</h2>
+  <p>
+    The Mobility Need Index combines the accessibility gap with official ACS 5-year indicators:
+    zero-vehicle households, poverty, residents age 65 and older, and disability. Higher values indicate
+    places where weak transportation access overlaps with higher demographic need.
+  </p>
+  <h3>Town Mobility Need Ranking</h3>
+  <div class="compact">
+    {table(["Rank", "Town", "ACS Population", "Need Index", "Access Score", "Zero-Car HH", "Poverty", "Age 65+", "Disability", "High-Need Units", "Dominant Driver"], mobility_towns)}
+  </div>
+
+  <h3>Analysis Unit Mobility Need Explanation</h3>
+  <div class="compact">
+    {table(["Rank", "Town", "Analysis Unit", "Need Index", "Tier", "Primary Driver", "Access Gap", "Zero-Car HH", "Poverty", "Age 65+", "Disability"], mobility_units)}
+  </div>
+
   <h2>Map Output</h2>
   <p>
     The map was generated from PostGIS layers using the QGIS Python API. It includes transit routes, stops, sidewalks,
@@ -475,7 +523,9 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
     <code>nearest_transit_stop</code>, <code>neighborhood_sidewalk_access</code>,
     <code>accessibility_scores</code>, <code>underserved_areas</code>,
     <code>analysis_unit_accessibility_kpis</code>, <code>town_accessibility_kpis</code>, and
-    <code>neighborhood_accessibility_map</code>.
+    <code>mobility_need_index</code>, <code>town_mobility_need_index</code>, and
+    <code>neighborhood_accessibility_map</code>. ACS demographics are stored in
+    <code>acs_town_demographics</code>.
   </p>
 
   <footer>

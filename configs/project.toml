@@ -20,6 +20,13 @@ timeout_seconds = 60
 prefix_path = 'C:\Program Files\QGIS 3.44.11'
 qgis_bin = 'C:\Program Files\QGIS 3.44.11\bin\qgis-ltr-bin.exe'
 
+[acs]
+year = 2024
+state = "23"
+county = "005"
+summary_file_base_url = "https://www2.census.gov/programs-surveys/acs/summary_file"
+towns = ["Portland", "South Portland", "Westbrook", "Falmouth", "Scarborough", "Gorham"]
+
 [[sources]]
 key = "transit_stops"
 table = "transit_stops"

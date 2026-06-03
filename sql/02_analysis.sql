@@ -1,5 +1,7 @@
 DROP TABLE IF EXISTS underserved_areas CASCADE;
 DROP TABLE IF EXISTS neighborhood_accessibility_map CASCADE;
+DROP TABLE IF EXISTS town_mobility_need_index CASCADE;
+DROP TABLE IF EXISTS mobility_need_index CASCADE;
 DROP TABLE IF EXISTS town_accessibility_kpis CASCADE;
 DROP TABLE IF EXISTS analysis_unit_accessibility_kpis CASCADE;
 DROP TABLE IF EXISTS accessibility_scores CASCADE;
@@ -283,7 +285,14 @@ unit_base AS (
         COALESCE(NULLIF(n.municipality, ''), n.name) AS town,
         n.name AS analysis_unit,
         n.population,
-        n.median_income,
+        COALESCE(acs.median_household_income, n.median_income) AS median_income,
+        acs.geoid AS acs_geoid,
+        acs.acs_year,
+        acs.total_population AS acs_town_population,
+        acs.pct_below_poverty,
+        acs.pct_zero_vehicle_households,
+        acs.pct_65_plus,
+        acs.pct_with_disability,
         n.is_synthetic,
         cp.population_400m,
         cp.pct_pop_400m,
@@ -331,6 +340,8 @@ unit_base AS (
     JOIN neighborhood_facility_counts nfc ON nfc.neighborhood_id = n.id
     JOIN nearest_facilities nf ON nf.neighborhood_id = n.id
     JOIN coverage_pivot cp ON cp.neighborhood_id = n.id
+    LEFT JOIN acs_town_demographics acs
+        ON lower(acs.town) = lower(COALESCE(NULLIF(n.municipality, ''), n.name))
 )
 SELECT
     ROW_NUMBER() OVER (ORDER BY accessibility_score DESC, nearest_stop_distance_m ASC) AS accessibility_rank,
@@ -359,6 +370,12 @@ WITH town_rollup AS (
         ROUND(AVG(hospital_score)::numeric, 2) AS avg_hospital_score,
         ROUND((SUM(sidewalk_m)::numeric / 1000), 2) AS sidewalk_km,
         ROUND(((SUM(sidewalk_m)::numeric / NULLIF(SUM(population), 0)) * 1000), 2) AS sidewalk_m_per_1000_residents,
+        MAX(acs_town_population)::integer AS acs_town_population,
+        MAX(median_income) AS median_household_income,
+        ROUND(MAX(pct_below_poverty)::numeric, 2) AS pct_below_poverty,
+        ROUND(MAX(pct_zero_vehicle_households)::numeric, 2) AS pct_zero_vehicle_households,
+        ROUND(MAX(pct_65_plus)::numeric, 2) AS pct_65_plus,
+        ROUND(MAX(pct_with_disability)::numeric, 2) AS pct_with_disability,
         SUM(schools_inside)::integer AS schools_inside,
         SUM(hospitals_inside)::integer AS hospitals_inside,
         COUNT(*) FILTER (WHERE within_800m)::integer AS units_within_800m,
@@ -376,6 +393,81 @@ FROM town_rollup;
 CREATE INDEX idx_analysis_unit_accessibility_kpis_town ON analysis_unit_accessibility_kpis (town);
 CREATE INDEX idx_town_accessibility_kpis_rank ON town_accessibility_kpis (town_rank);
 
+-- Analysis 6: Mobility Need Index.
+-- Higher scores identify places where transportation gaps overlap with
+-- demographic vulnerability measured from official ACS 5-year data.
+CREATE TABLE mobility_need_index AS
+WITH components AS (
+    SELECT
+        k.*,
+        ROUND((100 - k.accessibility_score)::numeric, 2) AS accessibility_gap_score,
+        COALESCE(k.pct_zero_vehicle_households, 0) AS zero_vehicle_need_score,
+        COALESCE(k.pct_below_poverty, 0) AS poverty_need_score,
+        COALESCE(k.pct_65_plus, 0) AS older_adult_need_score,
+        COALESCE(k.pct_with_disability, 0) AS disability_need_score
+    FROM analysis_unit_accessibility_kpis k
+),
+indexed AS (
+    SELECT
+        *,
+        ROUND((
+            0.30 * accessibility_gap_score
+            + 0.20 * zero_vehicle_need_score
+            + 0.20 * poverty_need_score
+            + 0.15 * older_adult_need_score
+            + 0.15 * disability_need_score
+        )::numeric, 2) AS mobility_need_index
+    FROM components
+)
+SELECT
+    ROW_NUMBER() OVER (ORDER BY mobility_need_index DESC, accessibility_gap_score DESC) AS mobility_need_rank,
+    *,
+    CASE
+        WHEN mobility_need_index >= 40 THEN 'Critical'
+        WHEN mobility_need_index >= 30 THEN 'High'
+        WHEN mobility_need_index >= 20 THEN 'Elevated'
+        ELSE 'Monitor'
+    END AS priority_tier,
+    CASE
+        WHEN accessibility_gap_score = GREATEST(accessibility_gap_score, zero_vehicle_need_score, poverty_need_score, older_adult_need_score, disability_need_score) THEN 'Access gap'
+        WHEN zero_vehicle_need_score = GREATEST(accessibility_gap_score, zero_vehicle_need_score, poverty_need_score, older_adult_need_score, disability_need_score) THEN 'Zero-car households'
+        WHEN poverty_need_score = GREATEST(accessibility_gap_score, zero_vehicle_need_score, poverty_need_score, older_adult_need_score, disability_need_score) THEN 'Poverty'
+        WHEN older_adult_need_score = GREATEST(accessibility_gap_score, zero_vehicle_need_score, poverty_need_score, older_adult_need_score, disability_need_score) THEN 'Older adults'
+        ELSE 'Disability'
+    END AS primary_need_driver
+FROM indexed;
+
+CREATE TABLE town_mobility_need_index AS
+WITH town_rollup AS (
+    SELECT
+        town,
+        COUNT(*) AS analysis_units,
+        SUM(population)::integer AS sample_population,
+        MAX(acs_town_population)::integer AS acs_town_population,
+        ROUND((SUM(mobility_need_index * population)::numeric / NULLIF(SUM(population), 0)), 2) AS weighted_mobility_need_index,
+        ROUND(AVG(mobility_need_index)::numeric, 2) AS avg_mobility_need_index,
+        ROUND(MAX(mobility_need_index)::numeric, 2) AS max_mobility_need_index,
+        ROUND((SUM(accessibility_score * population)::numeric / NULLIF(SUM(population), 0)), 2) AS weighted_accessibility_score,
+        ROUND(MAX(pct_below_poverty)::numeric, 2) AS pct_below_poverty,
+        ROUND(MAX(pct_zero_vehicle_households)::numeric, 2) AS pct_zero_vehicle_households,
+        ROUND(MAX(pct_65_plus)::numeric, 2) AS pct_65_plus,
+        ROUND(MAX(pct_with_disability)::numeric, 2) AS pct_with_disability,
+        ROUND(AVG(accessibility_gap_score)::numeric, 2) AS avg_accessibility_gap_score,
+        ROUND(AVG(nearest_stop_distance_m)::numeric, 2) AS avg_nearest_stop_m,
+        COUNT(*) FILTER (WHERE priority_tier IN ('Critical', 'High'))::integer AS high_need_units,
+        COUNT(*) FILTER (WHERE is_underserved)::integer AS underserved_units,
+        MODE() WITHIN GROUP (ORDER BY primary_need_driver) AS dominant_need_driver
+    FROM mobility_need_index
+    GROUP BY town
+)
+SELECT
+    ROW_NUMBER() OVER (ORDER BY weighted_mobility_need_index DESC, avg_accessibility_gap_score DESC) AS mobility_need_town_rank,
+    *
+FROM town_rollup;
+
+CREATE INDEX idx_mobility_need_index_rank ON mobility_need_index (mobility_need_rank);
+CREATE INDEX idx_town_mobility_need_index_rank ON town_mobility_need_index (mobility_need_town_rank);
+
 -- Geometry-bearing map table for QGIS symbology.
 CREATE TABLE neighborhood_accessibility_map AS
 SELECT
@@ -391,10 +483,15 @@ SELECT
     a.school_score,
     a.hospital_score,
     a.accessibility_score,
+    m.mobility_need_index,
+    m.priority_tier,
+    m.primary_need_driver,
     n.geom
 FROM neighborhoods n
 JOIN accessibility_scores a
-    ON a.neighborhood_id = n.id;
+    ON a.neighborhood_id = n.id
+LEFT JOIN mobility_need_index m
+    ON m.neighborhood_id = n.id;
 
 CREATE INDEX idx_neighborhood_accessibility_map_geom
 ON neighborhood_accessibility_map USING gist (geom);
