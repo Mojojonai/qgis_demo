@@ -176,6 +176,12 @@ def write_report(config_path: str = "configs/project.toml") -> Path:
         lines.append("- No neighborhoods met the current underserved thresholds.")
     lines.extend([
         "",
+        "## Interactive Dashboard",
+        "",
+        "Open `reports/mobility_insecurity_dashboard.html` for the interactive MapLibre GL JS, deck.gl, and Apache ECharts dashboard with town filters, tooltips, KPI cards, charts, and the full all-town table.",
+    ])
+    lines.extend([
+        "",
         "## Notes",
         "",
         "This first-run report combines real GPCOG transit, route, study-area, and sidewalk layers with synthetic fallback records for neighborhoods, schools, and hospitals. Replace synthetic layers with verified public datasets before treating the numbers as authoritative.",

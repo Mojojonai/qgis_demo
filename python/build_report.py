@@ -430,6 +430,13 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
   </p>
   <img class="map" src="{html.escape(map_src)}" alt="Transit accessibility map">
 
+  <h2>Interactive Dashboard Output</h2>
+  <p>
+    A standalone browser dashboard is generated at <code>reports/mobility_insecurity_dashboard.html</code>.
+    It uses MapLibre GL JS, deck.gl, and Apache ECharts to support town filtering, map tooltips,
+    score comparisons, coverage charts, component-score radar views, and a full all-town KPI table.
+  </p>
+
   <h2 class="page-break">Spatial Analysis Results</h2>
   <h3>Transit Coverage Buffers</h3>
   {table(["Buffer", "Population Inside", "Population Outside", "Percent Covered"], coverage)}

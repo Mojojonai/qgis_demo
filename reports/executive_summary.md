@@ -1,6 +1,6 @@
 # Executive Summary
 
-Generated: 2026-06-03 11:44:46
+Generated: 2026-06-03 14:10:13
 
 ## Regional KPI Snapshot
 
@@ -41,6 +41,10 @@ Generated: 2026-06-03 11:44:46
 - 1. Gorham Center: score 29.58, farther than 800 m from transit: no
 - 2. East Deering: score 31.51, farther than 800 m from transit: no
 - 3. Scarborough North: score 36.46, farther than 800 m from transit: no
+
+## Interactive Dashboard
+
+Open `reports/mobility_insecurity_dashboard.html` for the interactive MapLibre GL JS, deck.gl, and Apache ECharts dashboard with town filters, tooltips, KPI cards, charts, and the full all-town table.
 
 ## Notes
 

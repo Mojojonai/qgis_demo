@@ -54,10 +54,17 @@ To build the portfolio report after the pipeline has run:
 python python\build_report.py --config configs\project.toml --pdf
 ```
 
+To build the interactive mobility dashboard:
+
+```powershell
+python python\build_dashboard.py --config configs\project.toml
+```
+
 Report outputs:
 
 - `reports/transit_accessibility_report.html`
 - `reports/transit_accessibility_report.pdf`
+- `reports/mobility_insecurity_dashboard.html`
 - `reports/transit_accessibility_map.pdf`
 - `reports/transit_accessibility_map.png`
 
@@ -72,6 +79,10 @@ The SQL in `sql/02_analysis.sql` implements:
 - Weighted accessibility score from 0 to 100.
 - Underserved area ranking.
 - Report-ready KPI tables for all towns and all analysis units.
+
+## Interactive Dashboard
+
+`python/build_dashboard.py` exports a standalone browser dashboard with MapLibre GL JS, deck.gl, and Apache ECharts. It includes an interactive accessibility map, town and analysis-unit filters, KPI cards, all-town charts, tooltips, and a full KPI table.
 
 ## QGIS Automation
 
