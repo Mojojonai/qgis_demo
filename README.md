@@ -117,6 +117,8 @@ The Greater Portland report keeps the detailed accessibility metrics from the Po
 
 The government KPI report adds statewide screens for housing pressure, transportation equity, aging in place, digital equity, workforce-support infrastructure, health access pressure, food/basic-needs pressure, child/family service demand, and climate-smart mobility opportunity. See [docs/government_kpi_framework.md](docs/government_kpi_framework.md) for KPI definitions.
 
+The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_areas_proposal.md](docs/climate_safe_housing_growth_areas_proposal.md) defines the next Maine-focused research project: flood risk, sea-level rise, infrastructure capacity, environmental constraints, housing need, and social vulnerability combined into a suitability and resilience-priority workflow.
+
 ## QGIS Automation
 
 The PyQGIS starter script is in `qgis/build_project.py`. It loads the PostGIS layers, applies basic symbology, builds a print layout, and exports map outputs. Run it from the QGIS Python environment after the database pipeline succeeds.
