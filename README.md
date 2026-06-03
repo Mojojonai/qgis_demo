@@ -71,6 +71,7 @@ The SQL in `sql/02_analysis.sql` implements:
 - Sidewalk, school, and hospital access measures.
 - Weighted accessibility score from 0 to 100.
 - Underserved area ranking.
+- Report-ready KPI tables for all towns and all analysis units.
 
 ## QGIS Automation
 

@@ -1,10 +1,14 @@
 DROP TABLE IF EXISTS underserved_areas CASCADE;
+DROP TABLE IF EXISTS neighborhood_accessibility_map CASCADE;
+DROP TABLE IF EXISTS town_accessibility_kpis CASCADE;
+DROP TABLE IF EXISTS analysis_unit_accessibility_kpis CASCADE;
 DROP TABLE IF EXISTS accessibility_scores CASCADE;
 DROP TABLE IF EXISTS neighborhood_facility_counts CASCADE;
 DROP TABLE IF EXISTS nearest_facilities CASCADE;
 DROP TABLE IF EXISTS nearest_transit_stop CASCADE;
 DROP TABLE IF EXISTS neighborhood_sidewalk_access CASCADE;
 DROP TABLE IF EXISTS coverage_population CASCADE;
+DROP TABLE IF EXISTS coverage_summary CASCADE;
 DROP TABLE IF EXISTS coverage_buffers CASCADE;
 
 DROP TABLE IF EXISTS transit_stops CASCADE;

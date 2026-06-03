@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -16,22 +17,91 @@ def fetch_rows(cfg: dict[str, Any], sql: str) -> list[tuple[Any, ...]]:
             return cur.fetchall()
 
 
+def fmt(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    if isinstance(value, int):
+        return f"{value:,}"
+    if isinstance(value, float):
+        return f"{value:,.2f}"
+    if isinstance(value, Decimal):
+        if value == value.to_integral_value():
+            return f"{int(value):,}"
+        return f"{value:,.2f}"
+    return str(value)
+
+
 def write_report(config_path: str = "configs/project.toml") -> Path:
     cfg = load_config(config_path)
     ensure_directories(cfg)
     reports_dir = resolve_path(cfg, "reports_dir")
 
-    top = fetch_rows(cfg, """
-        SELECT neighborhood_name, accessibility_score
-        FROM accessibility_scores
-        ORDER BY accessibility_score DESC
-        LIMIT 5
+    regional = fetch_rows(cfg, """
+        WITH town_stats AS (
+            SELECT
+                COUNT(*) AS town_count,
+                SUM(analysis_units) AS analysis_unit_count,
+                SUM(total_population) AS total_population,
+                ROUND((SUM(weighted_accessibility_score * total_population)::numeric / NULLIF(SUM(total_population), 0)), 2) AS population_weighted_score,
+                SUM(underserved_units) AS underserved_units
+            FROM town_accessibility_kpis
+        ),
+        coverage_400 AS (
+            SELECT population_inside, pct_population_inside
+            FROM coverage_summary
+            WHERE buffer_m = 400
+        ),
+        coverage_800 AS (
+            SELECT total_population, population_inside, pct_population_inside
+            FROM coverage_summary
+            WHERE buffer_m = 800
+        )
+        SELECT
+            ts.town_count,
+            ts.analysis_unit_count,
+            c800.total_population,
+            c400.population_inside AS population_400m,
+            c400.pct_population_inside AS pct_pop_400m,
+            c800.population_inside AS population_800m,
+            c800.pct_population_inside AS pct_pop_800m,
+            ts.population_weighted_score,
+            ts.underserved_units
+        FROM town_stats ts
+        CROSS JOIN coverage_400 c400
+        CROSS JOIN coverage_800 c800
+    """)[0]
+    towns = fetch_rows(cfg, """
+        SELECT
+            town_rank,
+            town,
+            analysis_units,
+            total_population,
+            pct_pop_400m,
+            pct_pop_800m,
+            weighted_accessibility_score,
+            avg_nearest_stop_m,
+            max_nearest_stop_m,
+            underserved_units
+        FROM town_accessibility_kpis
+        ORDER BY town_rank
     """)
-    bottom = fetch_rows(cfg, """
-        SELECT neighborhood_name, accessibility_score, nearest_stop_distance_m
-        FROM accessibility_scores
-        ORDER BY accessibility_score ASC
-        LIMIT 5
+    units = fetch_rows(cfg, """
+        SELECT
+            town,
+            analysis_unit,
+            population,
+            pct_pop_400m,
+            pct_pop_800m,
+            nearest_stop_distance_m,
+            within_800m,
+            accessibility_score,
+            lowest_scoring_dimension,
+            access_category,
+            is_underserved
+        FROM analysis_unit_accessibility_kpis
+        ORDER BY town, analysis_unit
     """)
     coverage = fetch_rows(cfg, """
         SELECT buffer_m, population_inside, population_outside, pct_population_inside
@@ -50,21 +120,56 @@ def write_report(config_path: str = "configs/project.toml") -> Path:
         "",
         f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         "",
-        "## Most Accessible Neighborhoods",
+        "## Regional KPI Snapshot",
         "",
     ]
-    lines.extend(f"- {name}: {score}" for name, score in top)
-    lines.extend(["", "## Least Accessible Neighborhoods", ""])
-    lines.extend(f"- {name}: {score} (nearest stop: {distance_m} m)" for name, score, distance_m in bottom)
+    (
+        town_count,
+        analysis_unit_count,
+        total_population,
+        population_400m,
+        pct_pop_400m,
+        population_800m,
+        pct_pop_800m,
+        population_weighted_score,
+        underserved_units,
+    ) = regional
+    lines.extend([
+        f"- Towns analyzed: {fmt(town_count)}",
+        f"- Analysis units: {fmt(analysis_unit_count)}",
+        f"- Total population represented: {fmt(total_population)}",
+        f"- Population inside 400 m transit access band: {fmt(population_400m)} ({fmt(pct_pop_400m)}%)",
+        f"- Population inside 800 m transit access band: {fmt(population_800m)} ({fmt(pct_pop_800m)}%)",
+        f"- Population-weighted accessibility score: {fmt(population_weighted_score)}",
+        f"- Underserved analysis units: {fmt(underserved_units)}",
+    ])
+    lines.extend(["", "## All-Town KPI Dashboard", ""])
+    lines.extend(
+        "- "
+        f"{rank}. {town}: units {fmt(units_count)}, population {fmt(population)}, "
+        f"400 m coverage {fmt(pct_400)}%, 800 m coverage {fmt(pct_800)}%, "
+        f"weighted score {fmt(score)}, avg nearest stop {fmt(avg_stop)} m, "
+        f"max nearest stop {fmt(max_stop)} m, underserved units {fmt(underserved_count)}"
+        for rank, town, units_count, population, pct_400, pct_800, score, avg_stop, max_stop, underserved_count in towns
+    )
+    lines.extend(["", "## All Analysis Unit KPI Detail", ""])
+    lines.extend(
+        "- "
+        f"{town} / {unit}: population {fmt(population)}, 400 m coverage {fmt(pct_400)}%, "
+        f"800 m coverage {fmt(pct_800)}%, nearest stop {fmt(distance_m)} m, "
+        f"within 800 m: {fmt(within_800m)}, score {fmt(score)}, "
+        f"limiting dimension {limiting_dimension}, category {category}, underserved: {fmt(is_underserved)}"
+        for town, unit, population, pct_400, pct_800, distance_m, within_800m, score, limiting_dimension, category, is_underserved in units
+    )
     lines.extend(["", "## Transit Coverage", ""])
     lines.extend(
-        f"- {buffer_m} m buffer: {inside} people inside, {outside} outside ({pct}% covered)"
+        f"- {fmt(buffer_m)} m buffer: {fmt(inside)} people inside, {fmt(outside)} outside ({fmt(pct)}% covered)"
         for buffer_m, inside, outside, pct in coverage
     )
     lines.extend(["", "## Underserved Area Ranking", ""])
     if underserved:
         lines.extend(
-            f"- {rank}. {name}: score {score}, farther than 800 m from transit: {farther}"
+            f"- {rank}. {name}: score {fmt(score)}, farther than 800 m from transit: {fmt(farther)}"
             for rank, name, score, farther in underserved
         )
     else:

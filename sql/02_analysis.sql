@@ -1,5 +1,7 @@
 DROP TABLE IF EXISTS underserved_areas CASCADE;
 DROP TABLE IF EXISTS neighborhood_accessibility_map CASCADE;
+DROP TABLE IF EXISTS town_accessibility_kpis CASCADE;
+DROP TABLE IF EXISTS analysis_unit_accessibility_kpis CASCADE;
 DROP TABLE IF EXISTS accessibility_scores CASCADE;
 DROP TABLE IF EXISTS neighborhood_facility_counts CASCADE;
 DROP TABLE IF EXISTS nearest_facilities CASCADE;
@@ -230,6 +232,149 @@ WHERE a.accessibility_score < 40
 
 CREATE INDEX idx_accessibility_scores_neighborhood ON accessibility_scores (neighborhood_id);
 CREATE INDEX idx_underserved_rank ON underserved_areas (underserved_rank);
+
+-- Analysis 5: report-ready KPI tables for every town and analysis unit.
+-- These tables support full report coverage, not just strongest/weakest examples.
+CREATE TABLE analysis_unit_accessibility_kpis AS
+WITH coverage_by_neighborhood AS (
+    SELECT
+        n.id AS neighborhood_id,
+        c.buffer_m,
+        ROUND(
+            (
+                n.population
+                * COALESCE(ST_Area(ST_Intersection(n.geom_m, c.geom_m)) / n.area_m2, 0)
+            )::numeric,
+            0
+        )::integer AS population_inside,
+        ROUND(
+            (
+                COALESCE(ST_Area(ST_Intersection(n.geom_m, c.geom_m)) / n.area_m2, 0)
+                * 100
+            )::numeric,
+            2
+        ) AS pct_population_inside
+    FROM (
+        SELECT
+            id,
+            population,
+            ST_Transform(geom, 26919) AS geom_m,
+            NULLIF(ST_Area(ST_Transform(geom, 26919)), 0) AS area_m2
+        FROM neighborhoods
+    ) n
+    CROSS JOIN (
+        SELECT buffer_m, ST_Transform(geom, 26919) AS geom_m
+        FROM coverage_buffers
+    ) c
+),
+coverage_pivot AS (
+    SELECT
+        neighborhood_id,
+        COALESCE(MAX(population_inside) FILTER (WHERE buffer_m = 400), 0) AS population_400m,
+        COALESCE(MAX(pct_population_inside) FILTER (WHERE buffer_m = 400), 0) AS pct_pop_400m,
+        COALESCE(MAX(population_inside) FILTER (WHERE buffer_m = 800), 0) AS population_800m,
+        COALESCE(MAX(pct_population_inside) FILTER (WHERE buffer_m = 800), 0) AS pct_pop_800m
+    FROM coverage_by_neighborhood
+    GROUP BY neighborhood_id
+),
+unit_base AS (
+    SELECT
+        n.id AS neighborhood_id,
+        COALESCE(NULLIF(n.municipality, ''), n.name) AS town,
+        n.name AS analysis_unit,
+        n.population,
+        n.median_income,
+        n.is_synthetic,
+        cp.population_400m,
+        cp.pct_pop_400m,
+        cp.population_800m,
+        cp.pct_pop_800m,
+        nt.stop_name AS nearest_stop_name,
+        nt.route_name AS nearest_route_name,
+        a.nearest_stop_distance_m,
+        nt.within_800m,
+        a.accessibility_score,
+        a.transit_score,
+        a.sidewalk_score,
+        a.school_score,
+        a.hospital_score,
+        swa.sidewalk_m,
+        ROUND((swa.sidewalk_m / 1000)::numeric, 2) AS sidewalk_km,
+        ROUND(((swa.sidewalk_m / NULLIF(n.population, 0)) * 1000)::numeric, 2) AS sidewalk_m_per_1000_residents,
+        nfc.schools_inside,
+        nfc.hospitals_inside,
+        nf.nearest_school_name,
+        nf.nearest_school_distance_m,
+        nf.nearest_hospital_name,
+        nf.nearest_hospital_distance_m,
+        EXISTS (
+            SELECT 1
+            FROM underserved_areas u
+            WHERE u.neighborhood_id = n.id
+        ) AS is_underserved,
+        CASE
+            WHEN a.transit_score = LEAST(a.transit_score, a.sidewalk_score, a.school_score, a.hospital_score) THEN 'Transit'
+            WHEN a.sidewalk_score = LEAST(a.transit_score, a.sidewalk_score, a.school_score, a.hospital_score) THEN 'Sidewalk'
+            WHEN a.school_score = LEAST(a.transit_score, a.sidewalk_score, a.school_score, a.hospital_score) THEN 'School'
+            ELSE 'Hospital'
+        END AS lowest_scoring_dimension,
+        CASE
+            WHEN a.accessibility_score >= 80 THEN 'High'
+            WHEN a.accessibility_score >= 60 THEN 'Moderate-high'
+            WHEN a.accessibility_score >= 40 THEN 'Moderate'
+            ELSE 'Low'
+        END AS access_category
+    FROM neighborhoods n
+    JOIN accessibility_scores a ON a.neighborhood_id = n.id
+    JOIN nearest_transit_stop nt ON nt.neighborhood_id = n.id
+    JOIN neighborhood_sidewalk_access swa ON swa.neighborhood_id = n.id
+    JOIN neighborhood_facility_counts nfc ON nfc.neighborhood_id = n.id
+    JOIN nearest_facilities nf ON nf.neighborhood_id = n.id
+    JOIN coverage_pivot cp ON cp.neighborhood_id = n.id
+)
+SELECT
+    ROW_NUMBER() OVER (ORDER BY accessibility_score DESC, nearest_stop_distance_m ASC) AS accessibility_rank,
+    *
+FROM unit_base;
+
+CREATE TABLE town_accessibility_kpis AS
+WITH town_rollup AS (
+    SELECT
+        town,
+        COUNT(*) AS analysis_units,
+        SUM(population)::integer AS total_population,
+        SUM(population_400m)::integer AS population_400m,
+        ROUND((SUM(population_400m)::numeric / NULLIF(SUM(population), 0)) * 100, 2) AS pct_pop_400m,
+        SUM(population_800m)::integer AS population_800m,
+        ROUND((SUM(population_800m)::numeric / NULLIF(SUM(population), 0)) * 100, 2) AS pct_pop_800m,
+        ROUND((SUM(accessibility_score * population)::numeric / NULLIF(SUM(population), 0)), 2) AS weighted_accessibility_score,
+        ROUND(AVG(accessibility_score)::numeric, 2) AS avg_accessibility_score,
+        ROUND(MIN(accessibility_score)::numeric, 2) AS min_accessibility_score,
+        ROUND(MAX(accessibility_score)::numeric, 2) AS max_accessibility_score,
+        ROUND(AVG(nearest_stop_distance_m)::numeric, 2) AS avg_nearest_stop_m,
+        ROUND(MAX(nearest_stop_distance_m)::numeric, 2) AS max_nearest_stop_m,
+        ROUND(AVG(transit_score)::numeric, 2) AS avg_transit_score,
+        ROUND(AVG(sidewalk_score)::numeric, 2) AS avg_sidewalk_score,
+        ROUND(AVG(school_score)::numeric, 2) AS avg_school_score,
+        ROUND(AVG(hospital_score)::numeric, 2) AS avg_hospital_score,
+        ROUND((SUM(sidewalk_m)::numeric / 1000), 2) AS sidewalk_km,
+        ROUND(((SUM(sidewalk_m)::numeric / NULLIF(SUM(population), 0)) * 1000), 2) AS sidewalk_m_per_1000_residents,
+        SUM(schools_inside)::integer AS schools_inside,
+        SUM(hospitals_inside)::integer AS hospitals_inside,
+        COUNT(*) FILTER (WHERE within_800m)::integer AS units_within_800m,
+        COUNT(*) FILTER (WHERE NOT within_800m)::integer AS units_farther_than_800m,
+        COUNT(*) FILTER (WHERE is_underserved)::integer AS underserved_units,
+        COUNT(*) FILTER (WHERE is_synthetic)::integer AS synthetic_units
+    FROM analysis_unit_accessibility_kpis
+    GROUP BY town
+)
+SELECT
+    ROW_NUMBER() OVER (ORDER BY weighted_accessibility_score DESC, avg_nearest_stop_m ASC) AS town_rank,
+    *
+FROM town_rollup;
+
+CREATE INDEX idx_analysis_unit_accessibility_kpis_town ON analysis_unit_accessibility_kpis (town);
+CREATE INDEX idx_town_accessibility_kpis_rank ON town_accessibility_kpis (town_rank);
 
 -- Geometry-bearing map table for QGIS symbology.
 CREATE TABLE neighborhood_accessibility_map AS

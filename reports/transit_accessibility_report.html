@@ -59,6 +59,9 @@
       gap: 8px;
       margin: 16px 0;
     }
+    .meta.regional {
+      grid-template-columns: repeat(5, 1fr);
+    }
     .metric {
       background: var(--soft);
       border: 1px solid var(--line);
@@ -84,6 +87,9 @@
       width: 100%;
       font-size: 10.5px;
       margin: 8px 0 14px;
+    }
+    .compact table {
+      font-size: 9px;
     }
     th, td {
       border: 1px solid var(--line);
@@ -129,7 +135,7 @@
   <section class="cover">
     <h1>Transit Accessibility and Spatial Equity Analysis</h1>
     <p class="subtitle">Greater Portland, Maine | PostgreSQL/PostGIS, Python ETL, Spatial SQL, QGIS Automation</p>
-    <p class="subtitle">Generated 2026-06-03 11:22:54 from the local PostGIS database on port 5764.</p>
+    <p class="subtitle">Generated 2026-06-03 11:44:46 from the local PostGIS database on port 5764.</p>
   </section>
 
   <section class="meta">
@@ -146,6 +152,15 @@
     runs spatial SQL, and exports a QGIS map and report-ready findings.
   </p>
   <p>The 800-meter transit stop buffer covers about 50,939 residents (69.12%) across the current neighborhood sample, leaving 22,761 residents outside that access band.</p>
+
+  <section class="meta regional">
+    <div class="metric"><div class="label">Towns</div><div class="value">6</div></div>
+    <div class="metric"><div class="label">Analysis Units</div><div class="value">7</div></div>
+    <div class="metric"><div class="label">Population</div><div class="value">73,700</div></div>
+    <div class="metric"><div class="label">800 m Coverage</div><div class="value">69.12%</div></div>
+    <div class="metric"><div class="label">Weighted Score</div><div class="value">61.03</div></div>
+  </section>
+
   <div class="callout risk">
     <p>
       Important interpretation note: neighborhoods, schools, and hospitals are currently synthetic sample records.
@@ -155,19 +170,39 @@
     </p>
   </div>
 
-  <div class="two-col">
-    <div>
-      <h3>Strongest Accessibility Scores</h3>
-      <table><thead><tr><th>Neighborhood</th><th>Population</th><th>Score</th><th>Transit</th><th>Sidewalk</th><th>School</th><th>Hospital</th><th>Nearest Stop m</th></tr></thead><tbody><tr><td>Portland Peninsula</td><td>18,000</td><td>91.25</td><td>100</td><td>100</td><td>69.23</td><td>74.02</td><td>122.21</td></tr>
-<tr><td>South Portland Waterfront</td><td>13,500</td><td>72.27</td><td>100</td><td>71.29</td><td>43.58</td><td>21.66</td><td>77.41</td></tr>
-<tr><td>Westbrook Core</td><td>11,800</td><td>64.44</td><td>100</td><td>16.35</td><td>97.69</td><td>0</td><td>39.46</td></tr></tbody></table>
-    </div>
-    <div>
-      <h3>Lowest Accessibility Scores</h3>
-      <table><thead><tr><th>Neighborhood</th><th>Population</th><th>Score</th><th>Transit</th><th>Sidewalk</th><th>School</th><th>Hospital</th><th>Nearest Stop m</th></tr></thead><tbody><tr><td>Gorham Center</td><td>7,800</td><td>29.58</td><td>70</td><td>5.25</td><td>0</td><td>0</td><td>731.30</td></tr>
-<tr><td>East Deering</td><td>7,200</td><td>31.51</td><td>70</td><td>11.70</td><td>0</td><td>0</td><td>416.32</td></tr>
-<tr><td>Scarborough North</td><td>9,000</td><td>36.46</td><td>70</td><td>28.20</td><td>0</td><td>0</td><td>716.90</td></tr></tbody></table>
-    </div>
+  <h2>KPI Questions Covered</h2>
+  <ul>
+    <li>How many towns and analysis units are included in the first-run study area?</li>
+    <li>What share of each town's population is estimated inside 400-meter and 800-meter stop-access bands?</li>
+    <li>Which towns have the strongest population-weighted accessibility scores, and what component scores explain them?</li>
+    <li>How far is each town from its nearest transit stop on average, and what is the longest nearest-stop distance inside that town?</li>
+    <li>Which towns contain underserved analysis units under the current score and distance thresholds?</li>
+    <li>Which dimension is the limiting factor for each analysis unit: transit, sidewalk, school, or hospital access?</li>
+  </ul>
+
+  <h2>All-Town KPI Dashboard</h2>
+  <p>
+    The tables below report every town represented in the current analysis units. Scores are population-weighted at the
+    town level so larger units contribute proportionally to the town summary.
+  </p>
+  <h3>Town Coverage and Score Summary</h3>
+  <div class="compact">
+    <table><thead><tr><th>Rank</th><th>Town</th><th>Units</th><th>Population</th><th>Pop 400 m</th><th>Pct 400 m</th><th>Pop 800 m</th><th>Pct 800 m</th><th>Weighted Score</th><th>Avg Stop m</th><th>Max Stop m</th><th>Underserved Units</th></tr></thead><tbody><tr><td>1</td><td>Portland</td><td>2</td><td>25,200</td><td>16,812</td><td>66.71%</td><td>22,555</td><td>89.50%</td><td>74.18</td><td>269.27</td><td>416.32</td><td>1</td></tr>
+<tr><td>2</td><td>South Portland</td><td>1</td><td>13,500</td><td>7,670</td><td>56.81%</td><td>11,645</td><td>86.26%</td><td>72.27</td><td>77.41</td><td>77.41</td><td>0</td></tr>
+<tr><td>3</td><td>Westbrook</td><td>1</td><td>11,800</td><td>5,794</td><td>49.10%</td><td>9,493</td><td>80.45%</td><td>64.44</td><td>39.46</td><td>39.46</td><td>0</td></tr>
+<tr><td>4</td><td>Falmouth</td><td>1</td><td>6,400</td><td>1,566</td><td>24.47%</td><td>2,965</td><td>46.33%</td><td>52.13</td><td>169.19</td><td>169.19</td><td>0</td></tr>
+<tr><td>5</td><td>Scarborough</td><td>1</td><td>9,000</td><td>1,453</td><td>16.14%</td><td>3,336</td><td>37.07%</td><td>36.46</td><td>716.90</td><td>716.90</td><td>1</td></tr>
+<tr><td>6</td><td>Gorham</td><td>1</td><td>7,800</td><td>282</td><td>3.62%</td><td>946</td><td>12.13%</td><td>29.58</td><td>731.30</td><td>731.30</td><td>1</td></tr></tbody></table>
+  </div>
+
+  <h3>Town Component and Asset KPIs</h3>
+  <div class="compact">
+    <table><thead><tr><th>Town</th><th>Transit</th><th>Sidewalk</th><th>School</th><th>Hospital</th><th>Sidewalk km</th><th>Sidewalk m/1k Pop</th><th>Schools</th><th>Hospitals</th><th>Units Within 800 m</th><th>Units Farther 800 m</th></tr></thead><tbody><tr><td>Portland</td><td>85</td><td>55.85</td><td>34.62</td><td>37.01</td><td>187.47</td><td>7,439.14</td><td>1</td><td>2</td><td>2</td><td>0</td></tr>
+<tr><td>South Portland</td><td>100</td><td>71.29</td><td>43.58</td><td>21.66</td><td>119.64</td><td>8,862.35</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+<tr><td>Westbrook</td><td>100</td><td>16.35</td><td>97.69</td><td>0</td><td>27.44</td><td>2,325.79</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+<tr><td>Falmouth</td><td>100</td><td>27.58</td><td>19.27</td><td>0</td><td>46.29</td><td>7,232.05</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+<tr><td>Scarborough</td><td>70</td><td>28.20</td><td>0</td><td>0</td><td>47.33</td><td>5,258.70</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+<tr><td>Gorham</td><td>70</td><td>5.25</td><td>0</td><td>0</td><td>8.82</td><td>1,130.60</td><td>0</td><td>0</td><td>1</td><td>0</td></tr></tbody></table>
   </div>
 
   <h2>Map Output</h2>
@@ -182,6 +217,17 @@
   <table><thead><tr><th>Buffer</th><th>Population Inside</th><th>Population Outside</th><th>Percent Covered</th></tr></thead><tbody><tr><td>400 m</td><td>33,577</td><td>40,123</td><td>45.56%</td></tr>
 <tr><td>800 m</td><td>50,939</td><td>22,761</td><td>69.12%</td></tr></tbody></table>
 
+  <h3>All Analysis Unit KPI Detail</h3>
+  <div class="compact">
+    <table><thead><tr><th>Town</th><th>Analysis Unit</th><th>Population</th><th>Pct 400 m</th><th>Pct 800 m</th><th>Nearest Stop m</th><th>Within 800 m</th><th>Score</th><th>Transit</th><th>Sidewalk</th><th>School</th><th>Hospital</th><th>Limiting Dimension</th><th>Category</th><th>Underserved</th></tr></thead><tbody><tr><td>Falmouth</td><td>Falmouth Foreside</td><td>6,400</td><td>24.47%</td><td>46.32%</td><td>169.19</td><td>Yes</td><td>52.13</td><td>100</td><td>27.58</td><td>19.27</td><td>0</td><td>Hospital</td><td>Moderate</td><td>No</td></tr>
+<tr><td>Gorham</td><td>Gorham Center</td><td>7,800</td><td>3.62%</td><td>12.13%</td><td>731.30</td><td>Yes</td><td>29.58</td><td>70</td><td>5.25</td><td>0</td><td>0</td><td>School</td><td>Low</td><td>Yes</td></tr>
+<tr><td>Portland</td><td>East Deering</td><td>7,200</td><td>29.40%</td><td>64.18%</td><td>416.32</td><td>Yes</td><td>31.51</td><td>70</td><td>11.70</td><td>0</td><td>0</td><td>School</td><td>Low</td><td>Yes</td></tr>
+<tr><td>Portland</td><td>Portland Peninsula</td><td>18,000</td><td>81.64%</td><td>99.63%</td><td>122.21</td><td>Yes</td><td>91.25</td><td>100</td><td>100</td><td>69.23</td><td>74.02</td><td>School</td><td>High</td><td>No</td></tr>
+<tr><td>Scarborough</td><td>Scarborough North</td><td>9,000</td><td>16.14%</td><td>37.07%</td><td>716.90</td><td>Yes</td><td>36.46</td><td>70</td><td>28.20</td><td>0</td><td>0</td><td>School</td><td>Low</td><td>Yes</td></tr>
+<tr><td>South Portland</td><td>South Portland Waterfront</td><td>13,500</td><td>56.81%</td><td>86.26%</td><td>77.41</td><td>Yes</td><td>72.27</td><td>100</td><td>71.29</td><td>43.58</td><td>21.66</td><td>Hospital</td><td>Moderate-high</td><td>No</td></tr>
+<tr><td>Westbrook</td><td>Westbrook Core</td><td>11,800</td><td>49.11%</td><td>80.45%</td><td>39.46</td><td>Yes</td><td>64.44</td><td>100</td><td>16.35</td><td>97.69</td><td>0</td><td>Hospital</td><td>Moderate-high</td><td>No</td></tr></tbody></table>
+  </div>
+
   <h3>Accessibility Scores</h3>
   <table><thead><tr><th>Neighborhood</th><th>Population</th><th>Accessibility</th><th>Transit</th><th>Sidewalk</th><th>School</th><th>Hospital</th><th>Nearest Stop m</th></tr></thead><tbody><tr><td>Portland Peninsula</td><td>18,000</td><td>91.25</td><td>100</td><td>100</td><td>69.23</td><td>74.02</td><td>122.21</td></tr>
 <tr><td>South Portland Waterfront</td><td>13,500</td><td>72.27</td><td>100</td><td>71.29</td><td>43.58</td><td>21.66</td><td>77.41</td></tr>
@@ -192,9 +238,9 @@
 <tr><td>Gorham Center</td><td>7,800</td><td>29.58</td><td>70</td><td>5.25</td><td>0</td><td>0</td><td>731.30</td></tr></tbody></table>
 
   <h3>Underserved Area Ranking</h3>
-  <table><thead><tr><th>Rank</th><th>Neighborhood</th><th>Score</th><th>Nearest Stop m</th><th>Score Below 40</th><th>Farther Than 800 m</th></tr></thead><tbody><tr><td>1</td><td>Gorham Center</td><td>29.58</td><td>731.30</td><td>1</td><td>0</td></tr>
-<tr><td>2</td><td>East Deering</td><td>31.51</td><td>416.32</td><td>1</td><td>0</td></tr>
-<tr><td>3</td><td>Scarborough North</td><td>36.46</td><td>716.90</td><td>1</td><td>0</td></tr></tbody></table>
+  <table><thead><tr><th>Rank</th><th>Neighborhood</th><th>Score</th><th>Nearest Stop m</th><th>Score Below 40</th><th>Farther Than 800 m</th></tr></thead><tbody><tr><td>1</td><td>Gorham Center</td><td>29.58</td><td>731.30</td><td>Yes</td><td>No</td></tr>
+<tr><td>2</td><td>East Deering</td><td>31.51</td><td>416.32</td><td>Yes</td><td>No</td></tr>
+<tr><td>3</td><td>Scarborough North</td><td>36.46</td><td>716.90</td><td>Yes</td><td>No</td></tr></tbody></table>
 
   <h2>Methods</h2>
   <p>
@@ -223,7 +269,8 @@
   <p>
     Key SQL artifacts: <code>coverage_buffers</code>, <code>coverage_summary</code>,
     <code>nearest_transit_stop</code>, <code>neighborhood_sidewalk_access</code>,
-    <code>accessibility_scores</code>, <code>underserved_areas</code>, and
+    <code>accessibility_scores</code>, <code>underserved_areas</code>,
+    <code>analysis_unit_accessibility_kpis</code>, <code>town_accessibility_kpis</code>, and
     <code>neighborhood_accessibility_map</code>.
   </p>
 

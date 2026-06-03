@@ -27,6 +27,8 @@ def scalar(cfg: dict[str, Any], sql: str) -> Any:
 def fmt(value: Any) -> str:
     if value is None:
         return ""
+    if isinstance(value, bool):
+        return "Yes" if value else "No"
     if isinstance(value, int):
         return f"{value:,}"
     if isinstance(value, float):
@@ -103,8 +105,97 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
         FROM underserved_areas
         ORDER BY underserved_rank;
     """)
-    top = scores[:3]
-    bottom = list(reversed(scores[-3:])) if len(scores) >= 3 else scores
+    regional_kpis = rows(cfg, """
+        WITH town_stats AS (
+            SELECT
+                COUNT(*) AS town_count,
+                SUM(analysis_units) AS analysis_unit_count,
+                SUM(total_population) AS total_population,
+                ROUND((SUM(weighted_accessibility_score * total_population)::numeric / NULLIF(SUM(total_population), 0)), 2) AS population_weighted_score,
+                ROUND(AVG(avg_nearest_stop_m)::numeric, 2) AS avg_town_nearest_stop_m,
+                SUM(underserved_units) AS underserved_units
+            FROM town_accessibility_kpis
+        ),
+        coverage_400 AS (
+            SELECT population_inside, pct_population_inside
+            FROM coverage_summary
+            WHERE buffer_m = 400
+        ),
+        coverage_800 AS (
+            SELECT total_population, population_inside, pct_population_inside
+            FROM coverage_summary
+            WHERE buffer_m = 800
+        )
+        SELECT
+            ts.town_count,
+            ts.analysis_unit_count,
+            c800.total_population,
+            c400.population_inside AS population_400m,
+            c400.pct_population_inside AS pct_pop_400m,
+            c800.population_inside AS population_800m,
+            c800.pct_population_inside AS pct_pop_800m,
+            ts.population_weighted_score,
+            ts.avg_town_nearest_stop_m,
+            ts.underserved_units
+        FROM town_stats ts
+        CROSS JOIN coverage_400 c400
+        CROSS JOIN coverage_800 c800;
+    """)
+    regional = regional_kpis[0] if regional_kpis else (0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+    town_overview = rows(cfg, """
+        SELECT
+            town_rank,
+            town,
+            analysis_units,
+            total_population,
+            population_400m,
+            pct_pop_400m || '%',
+            population_800m,
+            pct_pop_800m || '%',
+            weighted_accessibility_score,
+            avg_nearest_stop_m,
+            max_nearest_stop_m,
+            underserved_units
+        FROM town_accessibility_kpis
+        ORDER BY town_rank;
+    """)
+    town_components = rows(cfg, """
+        SELECT
+            town,
+            avg_transit_score,
+            avg_sidewalk_score,
+            avg_school_score,
+            avg_hospital_score,
+            sidewalk_km,
+            sidewalk_m_per_1000_residents,
+            schools_inside,
+            hospitals_inside,
+            units_within_800m,
+            units_farther_than_800m
+        FROM town_accessibility_kpis
+        ORDER BY town_rank;
+    """)
+    unit_kpis = rows(cfg, """
+        SELECT
+            town,
+            analysis_unit,
+            population,
+            pct_pop_400m || '%',
+            pct_pop_800m || '%',
+            nearest_stop_distance_m,
+            within_800m,
+            accessibility_score,
+            transit_score,
+            sidewalk_score,
+            school_score,
+            hospital_score,
+            lowest_scoring_dimension,
+            access_category,
+            is_underserved
+        FROM analysis_unit_accessibility_kpis
+        ORDER BY town, analysis_unit;
+    """)
 
     coverage_800 = rows(cfg, """
         SELECT population_inside, population_outside, pct_population_inside
@@ -120,6 +211,19 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
         )
     else:
         coverage_sentence = "Coverage statistics were not available."
+
+    (
+        town_count,
+        analysis_unit_count,
+        total_population,
+        regional_population_400m,
+        regional_pct_400m,
+        regional_population_800m,
+        regional_pct_800m,
+        population_weighted_score,
+        avg_town_nearest_stop_m,
+        underserved_unit_count,
+    ) = regional
 
     map_src = map_png.name if map_png.exists() else ""
     html_text = f"""<!doctype html>
@@ -183,6 +287,9 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
       gap: 8px;
       margin: 16px 0;
     }}
+    .meta.regional {{
+      grid-template-columns: repeat(5, 1fr);
+    }}
     .metric {{
       background: var(--soft);
       border: 1px solid var(--line);
@@ -208,6 +315,9 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
       width: 100%;
       font-size: 10.5px;
       margin: 8px 0 14px;
+    }}
+    .compact table {{
+      font-size: 9px;
     }}
     th, td {{
       border: 1px solid var(--line);
@@ -270,6 +380,15 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
     runs spatial SQL, and exports a QGIS map and report-ready findings.
   </p>
   <p>{html.escape(coverage_sentence)}</p>
+
+  <section class="meta regional">
+    <div class="metric"><div class="label">Towns</div><div class="value">{fmt(town_count)}</div></div>
+    <div class="metric"><div class="label">Analysis Units</div><div class="value">{fmt(analysis_unit_count)}</div></div>
+    <div class="metric"><div class="label">Population</div><div class="value">{fmt(total_population)}</div></div>
+    <div class="metric"><div class="label">800 m Coverage</div><div class="value">{fmt(regional_pct_800m)}%</div></div>
+    <div class="metric"><div class="label">Weighted Score</div><div class="value">{fmt(population_weighted_score)}</div></div>
+  </section>
+
   <div class="callout risk">
     <p>
       Important interpretation note: neighborhoods, schools, and hospitals are currently synthetic sample records.
@@ -279,15 +398,29 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
     </p>
   </div>
 
-  <div class="two-col">
-    <div>
-      <h3>Strongest Accessibility Scores</h3>
-      {table(["Neighborhood", "Population", "Score", "Transit", "Sidewalk", "School", "Hospital", "Nearest Stop m"], top)}
-    </div>
-    <div>
-      <h3>Lowest Accessibility Scores</h3>
-      {table(["Neighborhood", "Population", "Score", "Transit", "Sidewalk", "School", "Hospital", "Nearest Stop m"], bottom)}
-    </div>
+  <h2>KPI Questions Covered</h2>
+  <ul>
+    <li>How many towns and analysis units are included in the first-run study area?</li>
+    <li>What share of each town's population is estimated inside 400-meter and 800-meter stop-access bands?</li>
+    <li>Which towns have the strongest population-weighted accessibility scores, and what component scores explain them?</li>
+    <li>How far is each town from its nearest transit stop on average, and what is the longest nearest-stop distance inside that town?</li>
+    <li>Which towns contain underserved analysis units under the current score and distance thresholds?</li>
+    <li>Which dimension is the limiting factor for each analysis unit: transit, sidewalk, school, or hospital access?</li>
+  </ul>
+
+  <h2>All-Town KPI Dashboard</h2>
+  <p>
+    The tables below report every town represented in the current analysis units. Scores are population-weighted at the
+    town level so larger units contribute proportionally to the town summary.
+  </p>
+  <h3>Town Coverage and Score Summary</h3>
+  <div class="compact">
+    {table(["Rank", "Town", "Units", "Population", "Pop 400 m", "Pct 400 m", "Pop 800 m", "Pct 800 m", "Weighted Score", "Avg Stop m", "Max Stop m", "Underserved Units"], town_overview)}
+  </div>
+
+  <h3>Town Component and Asset KPIs</h3>
+  <div class="compact">
+    {table(["Town", "Transit", "Sidewalk", "School", "Hospital", "Sidewalk km", "Sidewalk m/1k Pop", "Schools", "Hospitals", "Units Within 800 m", "Units Farther 800 m"], town_components)}
   </div>
 
   <h2>Map Output</h2>
@@ -300,6 +433,11 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
   <h2 class="page-break">Spatial Analysis Results</h2>
   <h3>Transit Coverage Buffers</h3>
   {table(["Buffer", "Population Inside", "Population Outside", "Percent Covered"], coverage)}
+
+  <h3>All Analysis Unit KPI Detail</h3>
+  <div class="compact">
+    {table(["Town", "Analysis Unit", "Population", "Pct 400 m", "Pct 800 m", "Nearest Stop m", "Within 800 m", "Score", "Transit", "Sidewalk", "School", "Hospital", "Limiting Dimension", "Category", "Underserved"], unit_kpis)}
+  </div>
 
   <h3>Accessibility Scores</h3>
   {table(["Neighborhood", "Population", "Accessibility", "Transit", "Sidewalk", "School", "Hospital", "Nearest Stop m"], scores)}
@@ -328,7 +466,8 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
   <p>
     Key SQL artifacts: <code>coverage_buffers</code>, <code>coverage_summary</code>,
     <code>nearest_transit_stop</code>, <code>neighborhood_sidewalk_access</code>,
-    <code>accessibility_scores</code>, <code>underserved_areas</code>, and
+    <code>accessibility_scores</code>, <code>underserved_areas</code>,
+    <code>analysis_unit_accessibility_kpis</code>, <code>town_accessibility_kpis</code>, and
     <code>neighborhood_accessibility_map</code>.
   </p>
 
