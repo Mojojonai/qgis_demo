@@ -170,8 +170,12 @@ The earlier reports answer detailed Greater Portland mobility questions. This st
 
 ## Source Context
 
-- U.S. Census Bureau ACS 2024 5-year table-based Summary File: town population, income, poverty, zero-vehicle households, age 65+, and disability.
-- MaineHousing, State of Maine Housing Production Needs Study: Maine needs more housing supply and better alignment between housing location, economic opportunity, and quality of life.
-- Maine Department of Economic and Community Development, 2024 Economic Development Strategy Reset: workforce growth depends on supporting infrastructure such as housing, childcare, transportation, broadband, and local hubs.
-- Maine Climate Plan: future communities need lower-emission transportation choices and climate-aware growth.
+- U.S. Census Bureau ACS 2024 5-year table-based Summary File: town population, income, poverty, zero-vehicle households, age 65+, disability, children under 18, housing cost burden, seasonal/vacant housing, commute mode, long commutes, work-from-home, and household internet access.
+- MaineHousing, State of Maine Housing Production Needs Study: Maine needs more housing supply and better alignment between housing location, economic opportunity, and quality of life. https://www.mainehousing.org/docs/default-source/default-document-library/state-of-maine-housing-production-needs-study_full_final-v2.pdf
+- MaineDOT, Maine 2024-2028 Locally Coordinated Plan: transit needs assessment focuses on the general public, individuals with disabilities, older adults, low-income people, and people without access to a vehicle. https://www.maine.gov/dot/programs-services/transit
+- Maine DHHS, 2024-2029 State Health Improvement Plan: priority areas include healthy/stable housing and equitable access to care. https://www.maine.gov/dhhs/mecdc/ship/
+- Maine DHHS/OADS, State Plan on Aging 2025-2028 and Age-Friendly State Plan: older adults and adults with disabilities need coordinated, livable community supports. https://www.maine.gov/dhhs/oads/about-us/policy-planning
+- Maine Connectivity Authority, Digital Equity Plan: digital opportunity work targets older adults, veterans, low-income families, rural residents, people with disabilities, and minority populations. https://www.maineconnectivity.org/digital-equity
+- Maine Department of Economic and Community Development, 2024 Economic Development Strategy Reset: workforce growth depends on supporting infrastructure such as housing, childcare, transportation, broadband, and local hubs. https://www.maine.gov/decd/strategic-plan
+- Maine Climate Plan: future communities need lower-emission transportation choices, compact growth, climate-aware housing, and resilience. https://www.maine.gov/climateplan/the-plan
 - HUD Location Affordability framing: housing decisions are stronger when transportation cost and access are evaluated together.

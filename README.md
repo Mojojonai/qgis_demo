@@ -82,6 +82,10 @@ Report outputs:
 - `reports/maine_statewide_livability_investment_report.html`
 - `reports/maine_statewide_livability_investment_report.pdf`
 - `reports/maine_statewide_livability_investment_report.md`
+- `reports/maine_government_priority_kpi_report.html`
+- `reports/maine_government_priority_kpi_report.pdf`
+- `reports/maine_government_priority_kpi_report.md`
+- `reports/maine_government_priority_kpi_rankings.csv`
 - `reports/maine_focus_town_comparison.md`
 - `reports/maine_statewide_missing_needs_matrix.md`
 - `reports/maine_statewide_town_rankings.csv`
@@ -110,6 +114,8 @@ The SQL in `sql/02_analysis.sql` implements:
 `python/build_future_reports.py` builds a screening report suite for future living, real-estate, infrastructure, and local-service opportunity questions. It ranks towns by future livability and investor opportunity, then summarizes the missing needs that matter for housing, mobility, healthcare, aging, disability access, and workforce-support planning.
 
 The Greater Portland report keeps the detailed accessibility metrics from the PostGIS/QGIS prototype. The statewide Maine report uses ACS county-subdivision indicators for every populated Maine town and city, including focus places such as Kennebunk, Brunswick, Hollis, Cumberland, Portland, South Portland, Westbrook, Falmouth, Scarborough, and Gorham.
+
+The government KPI report adds statewide screens for housing pressure, transportation equity, aging in place, digital equity, workforce-support infrastructure, health access pressure, food/basic-needs pressure, child/family service demand, and climate-smart mobility opportunity. See [docs/government_kpi_framework.md](docs/government_kpi_framework.md) for KPI definitions.
 
 ## QGIS Automation
 

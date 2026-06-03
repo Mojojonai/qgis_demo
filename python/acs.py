@@ -28,12 +28,20 @@ SENTINELS = {
 TABLES = {
     "B01003": ["B01003_E001"],
     "B01001": [
+        "B01001_E003",
+        "B01001_E004",
+        "B01001_E005",
+        "B01001_E006",
         "B01001_E020",
         "B01001_E021",
         "B01001_E022",
         "B01001_E023",
         "B01001_E024",
         "B01001_E025",
+        "B01001_E027",
+        "B01001_E028",
+        "B01001_E029",
+        "B01001_E030",
         "B01001_E044",
         "B01001_E045",
         "B01001_E046",
@@ -59,10 +67,75 @@ TABLES = {
     ],
     "B19013": ["B19013_E001"],
     "B25044": ["B25044_E001", "B25044_E003", "B25044_E010"],
+    "B25001": ["B25001_E001"],
+    "B25004": ["B25004_E001", "B25004_E006"],
+    "B25070": [
+        "B25070_E001",
+        "B25070_E007",
+        "B25070_E008",
+        "B25070_E009",
+        "B25070_E010",
+        "B25070_E011",
+    ],
+    "B25091": [
+        "B25091_E001",
+        "B25091_E006",
+        "B25091_E007",
+        "B25091_E008",
+        "B25091_E015",
+        "B25091_E016",
+        "B25091_E017",
+    ],
+    "B08301": [
+        "B08301_E001",
+        "B08301_E003",
+        "B08301_E010",
+        "B08301_E018",
+        "B08301_E019",
+        "B08301_E020",
+        "B08301_E021",
+    ],
+    "B08303": [
+        "B08303_E001",
+        "B08303_E011",
+        "B08303_E012",
+        "B08303_E013",
+    ],
+    "B28002": ["B28002_E001", "B28002_E010", "B28002_E011"],
 }
 
 
-def request_text(url: str, timeout: int = 120):
+AGE_65_PLUS_FIELDS = [
+    "B01001_E020",
+    "B01001_E021",
+    "B01001_E022",
+    "B01001_E023",
+    "B01001_E024",
+    "B01001_E025",
+    "B01001_E044",
+    "B01001_E045",
+    "B01001_E046",
+    "B01001_E047",
+    "B01001_E048",
+    "B01001_E049",
+]
+
+UNDER_18_FIELDS = [
+    "B01001_E003",
+    "B01001_E004",
+    "B01001_E005",
+    "B01001_E006",
+    "B01001_E027",
+    "B01001_E028",
+    "B01001_E029",
+    "B01001_E030",
+]
+
+RENTER_COST_BURDEN_FIELDS = ["B25070_E007", "B25070_E008", "B25070_E009", "B25070_E010"]
+OWNER_COST_BURDEN_FIELDS = ["B25091_E006", "B25091_E007", "B25091_E015", "B25091_E016"]
+
+
+def request_text(url: str, timeout: int = 300):
     request = Request(url, headers={"User-Agent": "TransitAccessibilityProject/1.0"})
     response = urlopen(request, timeout=timeout)
     return io.TextIOWrapper(response, encoding="utf-8", errors="replace", newline="")
@@ -140,6 +213,12 @@ def add(values: Iterable[int | None]) -> int | None:
     return sum(numbers) if numbers else None
 
 
+def subtract(value: int | None, values: Iterable[int | None]) -> int | None:
+    if value is None:
+        return None
+    return value - sum(item for item in values if item is not None)
+
+
 def pct(part: int | None, total: int | None) -> Decimal | None:
     if part is None or total in (None, 0):
         return None
@@ -178,7 +257,8 @@ def build_demographics(cfg: dict[str, Any]) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for geoid, geo in sorted(targets.items(), key=lambda item: item[1]["town"]):
         total_population = table_rows["B01003"][geoid]["B01003_E001"]
-        population_65_plus = add(table_rows["B01001"][geoid].values())
+        population_65_plus = add(table_rows["B01001"][geoid][field] for field in AGE_65_PLUS_FIELDS)
+        population_under_18 = add(table_rows["B01001"][geoid][field] for field in UNDER_18_FIELDS)
         poverty_universe = table_rows["B17001"][geoid]["B17001_E001"]
         population_below_poverty = table_rows["B17001"][geoid]["B17001_E002"]
         disability_universe = table_rows["B18101"][geoid]["B18101_E001"]
@@ -191,6 +271,38 @@ def build_demographics(cfg: dict[str, Any]) -> list[dict[str, Any]]:
         zero_vehicle_households = add((
             table_rows["B25044"][geoid]["B25044_E003"],
             table_rows["B25044"][geoid]["B25044_E010"],
+        ))
+        total_housing_units = table_rows["B25001"][geoid]["B25001_E001"]
+        vacant_housing_units = table_rows["B25004"][geoid]["B25004_E001"]
+        seasonal_housing_units = table_rows["B25004"][geoid]["B25004_E006"]
+        renter_cost_universe = subtract(
+            table_rows["B25070"][geoid]["B25070_E001"],
+            [table_rows["B25070"][geoid]["B25070_E011"]],
+        )
+        cost_burdened_renter_households = add(table_rows["B25070"][geoid][field] for field in RENTER_COST_BURDEN_FIELDS)
+        owner_cost_universe = subtract(
+            table_rows["B25091"][geoid]["B25091_E001"],
+            [table_rows["B25091"][geoid]["B25091_E008"], table_rows["B25091"][geoid]["B25091_E017"]],
+        )
+        cost_burdened_owner_households = add(table_rows["B25091"][geoid][field] for field in OWNER_COST_BURDEN_FIELDS)
+        cost_burden_household_universe = add((renter_cost_universe, owner_cost_universe))
+        cost_burdened_households = add((cost_burdened_renter_households, cost_burdened_owner_households))
+        workers_16_plus = table_rows["B08301"][geoid]["B08301_E001"]
+        drove_alone_workers = table_rows["B08301"][geoid]["B08301_E003"]
+        public_transport_workers = table_rows["B08301"][geoid]["B08301_E010"]
+        walk_bike_workers = add((table_rows["B08301"][geoid]["B08301_E018"], table_rows["B08301"][geoid]["B08301_E019"]))
+        other_non_car_workers = table_rows["B08301"][geoid]["B08301_E020"]
+        work_from_home_workers = table_rows["B08301"][geoid]["B08301_E021"]
+        long_commute_workers = add((
+            table_rows["B08303"][geoid]["B08303_E011"],
+            table_rows["B08303"][geoid]["B08303_E012"],
+            table_rows["B08303"][geoid]["B08303_E013"],
+        ))
+        internet_households = table_rows["B28002"][geoid]["B28002_E001"]
+        no_internet_households = table_rows["B28002"][geoid]["B28002_E011"]
+        no_internet_or_subscription_households = add((
+            table_rows["B28002"][geoid]["B28002_E010"],
+            table_rows["B28002"][geoid]["B28002_E011"],
         ))
         record = {
             **geo,
@@ -205,9 +317,42 @@ def build_demographics(cfg: dict[str, Any]) -> list[dict[str, Any]]:
             "pct_zero_vehicle_households": pct(zero_vehicle_households, households),
             "population_65_plus": population_65_plus,
             "pct_65_plus": pct(population_65_plus, total_population),
+            "population_under_18": population_under_18,
+            "pct_under_18": pct(population_under_18, total_population),
             "disability_universe": disability_universe,
             "population_with_disability": population_with_disability,
             "pct_with_disability": pct(population_with_disability, disability_universe),
+            "total_housing_units": total_housing_units,
+            "vacant_housing_units": vacant_housing_units,
+            "pct_vacant_housing_units": pct(vacant_housing_units, total_housing_units),
+            "seasonal_housing_units": seasonal_housing_units,
+            "pct_seasonal_housing_units": pct(seasonal_housing_units, total_housing_units),
+            "renter_cost_universe": renter_cost_universe,
+            "cost_burdened_renter_households": cost_burdened_renter_households,
+            "pct_cost_burdened_renter_households": pct(cost_burdened_renter_households, renter_cost_universe),
+            "owner_cost_universe": owner_cost_universe,
+            "cost_burdened_owner_households": cost_burdened_owner_households,
+            "pct_cost_burdened_owner_households": pct(cost_burdened_owner_households, owner_cost_universe),
+            "cost_burden_household_universe": cost_burden_household_universe,
+            "cost_burdened_households": cost_burdened_households,
+            "pct_cost_burdened_households": pct(cost_burdened_households, cost_burden_household_universe),
+            "workers_16_plus": workers_16_plus,
+            "drove_alone_workers": drove_alone_workers,
+            "pct_drove_alone_workers": pct(drove_alone_workers, workers_16_plus),
+            "public_transport_workers": public_transport_workers,
+            "pct_public_transport_workers": pct(public_transport_workers, workers_16_plus),
+            "walk_bike_workers": walk_bike_workers,
+            "pct_walk_bike_workers": pct(walk_bike_workers, workers_16_plus),
+            "other_non_car_workers": other_non_car_workers,
+            "work_from_home_workers": work_from_home_workers,
+            "pct_work_from_home_workers": pct(work_from_home_workers, workers_16_plus),
+            "long_commute_workers": long_commute_workers,
+            "pct_long_commute_workers": pct(long_commute_workers, workers_16_plus),
+            "internet_households": internet_households,
+            "no_internet_households": no_internet_households,
+            "pct_no_internet_households": pct(no_internet_households, internet_households),
+            "no_internet_or_subscription_households": no_internet_or_subscription_households,
+            "pct_no_internet_or_subscription_households": pct(no_internet_or_subscription_households, internet_households),
         }
         record["raw_properties"] = {
             "geography": geo,
@@ -251,12 +396,81 @@ def ensure_table(conn) -> None:
                 pct_zero_vehicle_households numeric,
                 population_65_plus integer,
                 pct_65_plus numeric,
+                population_under_18 integer,
+                pct_under_18 numeric,
                 disability_universe integer,
                 population_with_disability integer,
                 pct_with_disability numeric,
+                total_housing_units integer,
+                vacant_housing_units integer,
+                pct_vacant_housing_units numeric,
+                seasonal_housing_units integer,
+                pct_seasonal_housing_units numeric,
+                renter_cost_universe integer,
+                cost_burdened_renter_households integer,
+                pct_cost_burdened_renter_households numeric,
+                owner_cost_universe integer,
+                cost_burdened_owner_households integer,
+                pct_cost_burdened_owner_households numeric,
+                cost_burden_household_universe integer,
+                cost_burdened_households integer,
+                pct_cost_burdened_households numeric,
+                workers_16_plus integer,
+                drove_alone_workers integer,
+                pct_drove_alone_workers numeric,
+                public_transport_workers integer,
+                pct_public_transport_workers numeric,
+                walk_bike_workers integer,
+                pct_walk_bike_workers numeric,
+                other_non_car_workers integer,
+                work_from_home_workers integer,
+                pct_work_from_home_workers numeric,
+                long_commute_workers integer,
+                pct_long_commute_workers numeric,
+                internet_households integer,
+                no_internet_households integer,
+                pct_no_internet_households numeric,
+                no_internet_or_subscription_households integer,
+                pct_no_internet_or_subscription_households numeric,
                 raw_properties jsonb NOT NULL DEFAULT '{}'::jsonb
             );
         """)
+        for column, data_type in [
+            ("population_under_18", "integer"),
+            ("pct_under_18", "numeric"),
+            ("total_housing_units", "integer"),
+            ("vacant_housing_units", "integer"),
+            ("pct_vacant_housing_units", "numeric"),
+            ("seasonal_housing_units", "integer"),
+            ("pct_seasonal_housing_units", "numeric"),
+            ("renter_cost_universe", "integer"),
+            ("cost_burdened_renter_households", "integer"),
+            ("pct_cost_burdened_renter_households", "numeric"),
+            ("owner_cost_universe", "integer"),
+            ("cost_burdened_owner_households", "integer"),
+            ("pct_cost_burdened_owner_households", "numeric"),
+            ("cost_burden_household_universe", "integer"),
+            ("cost_burdened_households", "integer"),
+            ("pct_cost_burdened_households", "numeric"),
+            ("workers_16_plus", "integer"),
+            ("drove_alone_workers", "integer"),
+            ("pct_drove_alone_workers", "numeric"),
+            ("public_transport_workers", "integer"),
+            ("pct_public_transport_workers", "numeric"),
+            ("walk_bike_workers", "integer"),
+            ("pct_walk_bike_workers", "numeric"),
+            ("other_non_car_workers", "integer"),
+            ("work_from_home_workers", "integer"),
+            ("pct_work_from_home_workers", "numeric"),
+            ("long_commute_workers", "integer"),
+            ("pct_long_commute_workers", "numeric"),
+            ("internet_households", "integer"),
+            ("no_internet_households", "integer"),
+            ("pct_no_internet_households", "numeric"),
+            ("no_internet_or_subscription_households", "integer"),
+            ("pct_no_internet_or_subscription_households", "numeric"),
+        ]:
+            cur.execute(f"ALTER TABLE acs_town_demographics ADD COLUMN IF NOT EXISTS {column} {data_type};")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_acs_town_demographics_town ON acs_town_demographics (lower(town));")
 
 
@@ -266,16 +480,40 @@ def load_records(cfg: dict[str, Any], records: list[dict[str, Any]]) -> None:
             geoid, town, name, state_fips, county_fips, county_subdivision_fips, acs_year,
             total_population, median_household_income, poverty_universe, population_below_poverty,
             pct_below_poverty, households, zero_vehicle_households, pct_zero_vehicle_households,
-            population_65_plus, pct_65_plus, disability_universe, population_with_disability,
-            pct_with_disability, raw_properties
+            population_65_plus, pct_65_plus, population_under_18, pct_under_18,
+            disability_universe, population_with_disability, pct_with_disability,
+            total_housing_units, vacant_housing_units, pct_vacant_housing_units,
+            seasonal_housing_units, pct_seasonal_housing_units, renter_cost_universe,
+            cost_burdened_renter_households, pct_cost_burdened_renter_households,
+            owner_cost_universe, cost_burdened_owner_households, pct_cost_burdened_owner_households,
+            cost_burden_household_universe, cost_burdened_households, pct_cost_burdened_households,
+            workers_16_plus, drove_alone_workers, pct_drove_alone_workers,
+            public_transport_workers, pct_public_transport_workers, walk_bike_workers,
+            pct_walk_bike_workers, other_non_car_workers, work_from_home_workers,
+            pct_work_from_home_workers, long_commute_workers, pct_long_commute_workers,
+            internet_households, no_internet_households, pct_no_internet_households,
+            no_internet_or_subscription_households, pct_no_internet_or_subscription_households,
+            raw_properties
         )
         VALUES (
             %(geoid)s, %(town)s, %(name)s, %(state_fips)s, %(county_fips)s, %(county_subdivision_fips)s,
             %(acs_year)s, %(total_population)s, %(median_household_income)s, %(poverty_universe)s,
             %(population_below_poverty)s, %(pct_below_poverty)s, %(households)s,
             %(zero_vehicle_households)s, %(pct_zero_vehicle_households)s, %(population_65_plus)s,
-            %(pct_65_plus)s, %(disability_universe)s, %(population_with_disability)s,
-            %(pct_with_disability)s, %(raw_properties)s
+            %(pct_65_plus)s, %(population_under_18)s, %(pct_under_18)s, %(disability_universe)s,
+            %(population_with_disability)s, %(pct_with_disability)s,
+            %(total_housing_units)s, %(vacant_housing_units)s, %(pct_vacant_housing_units)s,
+            %(seasonal_housing_units)s, %(pct_seasonal_housing_units)s, %(renter_cost_universe)s,
+            %(cost_burdened_renter_households)s, %(pct_cost_burdened_renter_households)s,
+            %(owner_cost_universe)s, %(cost_burdened_owner_households)s, %(pct_cost_burdened_owner_households)s,
+            %(cost_burden_household_universe)s, %(cost_burdened_households)s, %(pct_cost_burdened_households)s,
+            %(workers_16_plus)s, %(drove_alone_workers)s, %(pct_drove_alone_workers)s,
+            %(public_transport_workers)s, %(pct_public_transport_workers)s, %(walk_bike_workers)s,
+            %(pct_walk_bike_workers)s, %(other_non_car_workers)s, %(work_from_home_workers)s,
+            %(pct_work_from_home_workers)s, %(long_commute_workers)s, %(pct_long_commute_workers)s,
+            %(internet_households)s, %(no_internet_households)s, %(pct_no_internet_households)s,
+            %(no_internet_or_subscription_households)s, %(pct_no_internet_or_subscription_households)s,
+            %(raw_properties)s
         )
         ON CONFLICT (geoid) DO UPDATE SET
             town = EXCLUDED.town,
@@ -294,9 +532,42 @@ def load_records(cfg: dict[str, Any], records: list[dict[str, Any]]) -> None:
             pct_zero_vehicle_households = EXCLUDED.pct_zero_vehicle_households,
             population_65_plus = EXCLUDED.population_65_plus,
             pct_65_plus = EXCLUDED.pct_65_plus,
+            population_under_18 = EXCLUDED.population_under_18,
+            pct_under_18 = EXCLUDED.pct_under_18,
             disability_universe = EXCLUDED.disability_universe,
             population_with_disability = EXCLUDED.population_with_disability,
             pct_with_disability = EXCLUDED.pct_with_disability,
+            total_housing_units = EXCLUDED.total_housing_units,
+            vacant_housing_units = EXCLUDED.vacant_housing_units,
+            pct_vacant_housing_units = EXCLUDED.pct_vacant_housing_units,
+            seasonal_housing_units = EXCLUDED.seasonal_housing_units,
+            pct_seasonal_housing_units = EXCLUDED.pct_seasonal_housing_units,
+            renter_cost_universe = EXCLUDED.renter_cost_universe,
+            cost_burdened_renter_households = EXCLUDED.cost_burdened_renter_households,
+            pct_cost_burdened_renter_households = EXCLUDED.pct_cost_burdened_renter_households,
+            owner_cost_universe = EXCLUDED.owner_cost_universe,
+            cost_burdened_owner_households = EXCLUDED.cost_burdened_owner_households,
+            pct_cost_burdened_owner_households = EXCLUDED.pct_cost_burdened_owner_households,
+            cost_burden_household_universe = EXCLUDED.cost_burden_household_universe,
+            cost_burdened_households = EXCLUDED.cost_burdened_households,
+            pct_cost_burdened_households = EXCLUDED.pct_cost_burdened_households,
+            workers_16_plus = EXCLUDED.workers_16_plus,
+            drove_alone_workers = EXCLUDED.drove_alone_workers,
+            pct_drove_alone_workers = EXCLUDED.pct_drove_alone_workers,
+            public_transport_workers = EXCLUDED.public_transport_workers,
+            pct_public_transport_workers = EXCLUDED.pct_public_transport_workers,
+            walk_bike_workers = EXCLUDED.walk_bike_workers,
+            pct_walk_bike_workers = EXCLUDED.pct_walk_bike_workers,
+            other_non_car_workers = EXCLUDED.other_non_car_workers,
+            work_from_home_workers = EXCLUDED.work_from_home_workers,
+            pct_work_from_home_workers = EXCLUDED.pct_work_from_home_workers,
+            long_commute_workers = EXCLUDED.long_commute_workers,
+            pct_long_commute_workers = EXCLUDED.pct_long_commute_workers,
+            internet_households = EXCLUDED.internet_households,
+            no_internet_households = EXCLUDED.no_internet_households,
+            pct_no_internet_households = EXCLUDED.pct_no_internet_households,
+            no_internet_or_subscription_households = EXCLUDED.no_internet_or_subscription_households,
+            pct_no_internet_or_subscription_households = EXCLUDED.pct_no_internet_or_subscription_households,
             raw_properties = EXCLUDED.raw_properties;
     """
     prepared = [{**record, "raw_properties": Json(record["raw_properties"])} for record in records]

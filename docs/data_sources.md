@@ -12,7 +12,7 @@ This project prefers real public data and uses synthetic fallback layers only wh
 | Study area | GPCOG/PACTS Study Area | `https://services3.arcgis.com/0UEH6aSHSRlnunGR/arcgis/rest/services/PACTS_Study_Area/FeatureServer/0` |
 | ACS town demographics | U.S. Census Bureau ACS 2024 5-year table-based Summary File | `https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/` |
 
-The ACS loader streams official Summary File tables for Maine county subdivisions and caches town records in `data/raw/acs_town_demographics.json`. Current indicators include total population, median household income, poverty, zero-vehicle households, population age 65 and older, and disability. The statewide future-livability reports score all populated Maine towns and cities from these ACS indicators, while the detailed transit/QGIS analysis still uses the Greater Portland spatial layers listed above.
+The ACS loader streams official Summary File tables for Maine county subdivisions and caches town records in `data/raw/acs_town_demographics.json`. Current indicators include total population, median household income, poverty, zero-vehicle households, population age 65 and older, disability, children under 18, housing cost burden, vacancy/seasonal housing pressure, commute mode, long-commute pressure, work-from-home, and household internet access. The statewide future-livability and government-priority reports score all populated Maine towns and cities from these ACS indicators, while the detailed transit/QGIS analysis still uses the Greater Portland spatial layers listed above.
 
 ## Synthetic First-Run Layers
 
