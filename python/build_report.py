@@ -332,14 +332,6 @@ def build_html(config_path: str = "configs/project.toml") -> Path:
     <code>neighborhood_accessibility_map</code>.
   </p>
 
-  <h2>Recommendations</h2>
-  <ul>
-    <li>Replace synthetic neighborhoods with Census block groups and ACS demographic attributes.</li>
-    <li>Add verified public school and healthcare-facility sources before presenting equity findings as authoritative.</li>
-    <li>Use the underserved ranking to prioritize candidate corridors for additional stop placement or service-frequency review.</li>
-    <li>Add demographic overlays, including income, age, disability, and vehicle access, to deepen the equity interpretation.</li>
-  </ul>
-
   <footer>
     Transit Accessibility and Spatial Equity Analysis for Greater Portland, Maine. Built with Python, PostgreSQL/PostGIS, spatial SQL, and QGIS automation.
   </footer>
