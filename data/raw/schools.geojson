@@ -1,0 +1,80 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-s-001",
+        "name": "Portland High School",
+        "type": "High School"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.2597,
+          43.6548
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-s-002",
+        "name": "Deering High School",
+        "type": "High School"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.2976,
+          43.6784
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-s-003",
+        "name": "Westbrook High School",
+        "type": "High School"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.3498,
+          43.6807
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-s-004",
+        "name": "South Portland High School",
+        "type": "High School"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.2521,
+          43.6355
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-s-005",
+        "name": "Falmouth High School",
+        "type": "High School"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.2308,
+          43.7351
+        ]
+      }
+    }
+  ]
+}

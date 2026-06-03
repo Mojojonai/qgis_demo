@@ -1,0 +1,264 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-n-001",
+        "name": "Portland Peninsula",
+        "municipality": "Portland",
+        "population": 18000,
+        "median_income": 64000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -70.285,
+              43.642
+            ],
+            [
+              -70.245,
+              43.642
+            ],
+            [
+              -70.245,
+              43.672
+            ],
+            [
+              -70.285,
+              43.672
+            ],
+            [
+              -70.285,
+              43.642
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-n-002",
+        "name": "East Deering",
+        "municipality": "Portland",
+        "population": 7200,
+        "median_income": 71000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -70.27,
+              43.675
+            ],
+            [
+              -70.232,
+              43.675
+            ],
+            [
+              -70.232,
+              43.707
+            ],
+            [
+              -70.27,
+              43.707
+            ],
+            [
+              -70.27,
+              43.675
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-n-003",
+        "name": "Westbrook Core",
+        "municipality": "Westbrook",
+        "population": 11800,
+        "median_income": 59000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -70.375,
+              43.662
+            ],
+            [
+              -70.325,
+              43.662
+            ],
+            [
+              -70.325,
+              43.7
+            ],
+            [
+              -70.375,
+              43.7
+            ],
+            [
+              -70.375,
+              43.662
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-n-004",
+        "name": "South Portland Waterfront",
+        "municipality": "South Portland",
+        "population": 13500,
+        "median_income": 68000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -70.3,
+              43.615
+            ],
+            [
+              -70.225,
+              43.615
+            ],
+            [
+              -70.225,
+              43.65
+            ],
+            [
+              -70.3,
+              43.65
+            ],
+            [
+              -70.3,
+              43.615
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-n-005",
+        "name": "Falmouth Foreside",
+        "municipality": "Falmouth",
+        "population": 6400,
+        "median_income": 98000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -70.282,
+              43.706
+            ],
+            [
+              -70.205,
+              43.706
+            ],
+            [
+              -70.205,
+              43.75
+            ],
+            [
+              -70.282,
+              43.75
+            ],
+            [
+              -70.282,
+              43.706
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-n-006",
+        "name": "Scarborough North",
+        "municipality": "Scarborough",
+        "population": 9000,
+        "median_income": 89000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -70.38,
+              43.57
+            ],
+            [
+              -70.292,
+              43.57
+            ],
+            [
+              -70.292,
+              43.623
+            ],
+            [
+              -70.38,
+              43.623
+            ],
+            [
+              -70.38,
+              43.57
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-n-007",
+        "name": "Gorham Center",
+        "municipality": "Gorham",
+        "population": 7800,
+        "median_income": 76000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -70.485,
+              43.645
+            ],
+            [
+              -70.405,
+              43.645
+            ],
+            [
+              -70.405,
+              43.704
+            ],
+            [
+              -70.485,
+              43.704
+            ],
+            [
+              -70.485,
+              43.645
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

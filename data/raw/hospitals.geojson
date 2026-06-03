@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-h-001",
+        "name": "Maine Medical Center",
+        "type": "Hospital"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.2755,
+          43.653
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-h-002",
+        "name": "Northern Light Mercy Hospital",
+        "type": "Hospital"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.3103,
+          43.6408
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "source_id": "syn-h-003",
+        "name": "Mercy Fore River",
+        "type": "Medical Center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.2562,
+          43.6609
+        ]
+      }
+    }
+  ]
+}

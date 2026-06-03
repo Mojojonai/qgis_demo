@@ -2,8 +2,6 @@
 __pycache__/
 *.pyc
 
-data/raw/
-data/processed/
 logs/
 reports/*.pdf
 reports/*.png
