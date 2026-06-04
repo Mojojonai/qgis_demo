@@ -80,6 +80,12 @@ To load the first live climate-housing infrastructure/exposure layers:
 python python\load_climate_open_data.py --config configs\project.toml
 ```
 
+To load Maine town boundaries and export a map-ready climate-housing GeoJSON:
+
+```powershell
+python python\load_maine_town_boundaries.py --config configs\project.toml
+```
+
 Report outputs:
 
 - `reports/transit_accessibility_report.html`
@@ -102,7 +108,9 @@ Report outputs:
 - `reports/climate_safe_housing_mvp_report.pdf`
 - `reports/climate_safe_housing_mvp_report.md`
 - `reports/climate_safe_housing_town_screening.csv`
+- `reports/climate_safe_housing_town_screening.geojson`
 - `reports/climate_housing_data_ingestion_summary.md`
+- `reports/climate_housing_town_boundary_summary.md`
 - `reports/maine_focus_town_comparison.md`
 - `reports/maine_statewide_missing_needs_matrix.md`
 - `reports/maine_statewide_town_rankings.csv`
@@ -139,6 +147,8 @@ The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_ar
 `python/build_climate_housing_mvp.py` creates the first same-day implementation of that project. It ranks Maine towns from the statewide ACS indicators already in PostGIS, writes `climate_housing_town_screening`, and generates MVP report/CSV outputs. The full parcel-level claim of climate-safe suitability is intentionally deferred until FEMA NFHL, Maine Geological Survey sea-level-rise/storm-surge, wetlands, conservation, DEM, roads, bridges, culverts, parcels, and zoning overlays are ingested.
 
 `python/load_climate_open_data.py` starts that ingestion by loading MaineDOT bridges, MaineDOT cross culverts, and Maine DEP sea-level-rise/flood impacted regulated-site layers into `climate_housing_infrastructure_assets`.
+
+`python/load_maine_town_boundaries.py` downloads official Census TIGER/Line Maine county-subdivision boundaries, loads them into `climate_housing_town_boundaries`, and exports `reports/climate_safe_housing_town_screening.geojson` for QGIS or web mapping.
 
 ## QGIS Automation
 

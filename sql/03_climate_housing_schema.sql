@@ -54,6 +54,23 @@ CREATE TABLE IF NOT EXISTS climate_housing_candidate_units (
     geom geometry(Geometry, 4326) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS climate_housing_town_boundaries (
+    id bigserial PRIMARY KEY,
+    geoid text NOT NULL UNIQUE,
+    state_fips text NOT NULL,
+    county_fips text NOT NULL,
+    county_subdivision_fips text NOT NULL,
+    town text NOT NULL,
+    name_lsad text,
+    county text,
+    land_area_sq_m numeric,
+    water_area_sq_m numeric,
+    source_name text NOT NULL,
+    source_url text NOT NULL,
+    raw_properties jsonb NOT NULL DEFAULT '{}'::jsonb,
+    geom geometry(MultiPolygon, 4326) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS climate_housing_town_screening (
     id bigserial PRIMARY KEY,
     town text NOT NULL,
@@ -84,6 +101,12 @@ CREATE INDEX IF NOT EXISTS idx_climate_housing_infrastructure_assets_geom
 CREATE INDEX IF NOT EXISTS idx_climate_housing_candidate_units_geom
     ON climate_housing_candidate_units USING gist (geom);
 
+CREATE INDEX IF NOT EXISTS idx_climate_housing_town_boundaries_geom
+    ON climate_housing_town_boundaries USING gist (geom);
+
+CREATE INDEX IF NOT EXISTS idx_climate_housing_town_boundaries_town
+    ON climate_housing_town_boundaries (lower(town), lower(county));
+
 CREATE INDEX IF NOT EXISTS idx_climate_housing_town_screening_town
     ON climate_housing_town_screening (lower(town), lower(county));
 
@@ -91,4 +114,5 @@ COMMENT ON TABLE climate_housing_hazard_zones IS 'Future-ingest table for FEMA N
 COMMENT ON TABLE climate_housing_environmental_constraints IS 'Future-ingest table for wetlands, conserved lands, shoreland zones, habitat, steep-slope masks, and related development constraints.';
 COMMENT ON TABLE climate_housing_infrastructure_assets IS 'Future-ingest table for roads, bridges, culverts, wastewater, water, critical facilities, broadband, and other infrastructure assets.';
 COMMENT ON TABLE climate_housing_candidate_units IS 'Parcel, grid-cell, or tract-level candidate units for full climate-safe housing suitability modeling.';
+COMMENT ON TABLE climate_housing_town_boundaries IS 'Official U.S. Census TIGER/Line county subdivision boundaries for Maine, used to map town-level screening scores.';
 COMMENT ON TABLE climate_housing_town_screening IS 'Town-level same-day MVP screening scores built from statewide ACS indicators before parcel/hazard overlay ingestion.';
