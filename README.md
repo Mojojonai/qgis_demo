@@ -98,6 +98,12 @@ To build the climate-safe housing policy decision matrix:
 python python\build_climate_policy_matrix.py --config configs\project.toml --pdf
 ```
 
+To build the synchronized climate-safe housing intelligence app:
+
+```powershell
+python python\build_climate_housing_app.py --config configs\project.toml
+```
+
 Report outputs:
 
 - `reports/transit_accessibility_report.html`
@@ -126,6 +132,7 @@ Report outputs:
 - `reports/climate_housing_policy_decision_matrix.pdf`
 - `reports/climate_housing_policy_decision_matrix.md`
 - `reports/climate_housing_policy_decision_matrix.csv`
+- `reports/climate_housing_intelligence_app.html`
 - `reports/climate_housing_data_ingestion_summary.md`
 - `reports/climate_housing_town_boundary_summary.md`
 - `reports/maine_focus_town_comparison.md`
@@ -170,6 +177,8 @@ The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_ar
 `python/build_climate_housing_map.py` creates a dependency-free standalone HTML/SVG map from the town screening GeoJSON with metric switching, county filtering, town search, town detail panels, and ranked town lists.
 
 `python/build_climate_policy_matrix.py` converts the town-level screen into action categories for policymakers: near-term housing search, resilience before or alongside growth, seasonal market stabilization, infrastructure capacity build-out, hazard-overlay-first review, and statewide monitoring.
+
+`python/build_climate_housing_app.py` builds a synchronized standalone dashboard app where KPI filters, policy-action categories, town search, map selection, profile details, action charts, scatter plots, and ranked tables all update together.
 
 ## QGIS Automation
 
