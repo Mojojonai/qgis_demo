@@ -92,6 +92,12 @@ To build the standalone interactive climate-safe housing map:
 python python\build_climate_housing_map.py --config configs\project.toml
 ```
 
+To build the climate-safe housing policy decision matrix:
+
+```powershell
+python python\build_climate_policy_matrix.py --config configs\project.toml --pdf
+```
+
 Report outputs:
 
 - `reports/transit_accessibility_report.html`
@@ -116,6 +122,10 @@ Report outputs:
 - `reports/climate_safe_housing_town_screening.csv`
 - `reports/climate_safe_housing_town_screening.geojson`
 - `reports/climate_safe_housing_interactive_map.html`
+- `reports/climate_housing_policy_decision_matrix.html`
+- `reports/climate_housing_policy_decision_matrix.pdf`
+- `reports/climate_housing_policy_decision_matrix.md`
+- `reports/climate_housing_policy_decision_matrix.csv`
 - `reports/climate_housing_data_ingestion_summary.md`
 - `reports/climate_housing_town_boundary_summary.md`
 - `reports/maine_focus_town_comparison.md`
@@ -158,6 +168,8 @@ The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_ar
 `python/load_maine_town_boundaries.py` downloads official Census TIGER/Line Maine county-subdivision boundaries, loads them into `climate_housing_town_boundaries`, and exports `reports/climate_safe_housing_town_screening.geojson` for QGIS or web mapping.
 
 `python/build_climate_housing_map.py` creates a dependency-free standalone HTML/SVG map from the town screening GeoJSON with metric switching, county filtering, town search, town detail panels, and ranked town lists.
+
+`python/build_climate_policy_matrix.py` converts the town-level screen into action categories for policymakers: near-term housing search, resilience before or alongside growth, seasonal market stabilization, infrastructure capacity build-out, hazard-overlay-first review, and statewide monitoring.
 
 ## QGIS Automation
 
