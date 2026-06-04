@@ -86,6 +86,12 @@ To load Maine town boundaries and export a map-ready climate-housing GeoJSON:
 python python\load_maine_town_boundaries.py --config configs\project.toml
 ```
 
+To build the standalone interactive climate-safe housing map:
+
+```powershell
+python python\build_climate_housing_map.py --config configs\project.toml
+```
+
 Report outputs:
 
 - `reports/transit_accessibility_report.html`
@@ -109,6 +115,7 @@ Report outputs:
 - `reports/climate_safe_housing_mvp_report.md`
 - `reports/climate_safe_housing_town_screening.csv`
 - `reports/climate_safe_housing_town_screening.geojson`
+- `reports/climate_safe_housing_interactive_map.html`
 - `reports/climate_housing_data_ingestion_summary.md`
 - `reports/climate_housing_town_boundary_summary.md`
 - `reports/maine_focus_town_comparison.md`
@@ -149,6 +156,8 @@ The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_ar
 `python/load_climate_open_data.py` starts that ingestion by loading MaineDOT bridges, MaineDOT cross culverts, and Maine DEP sea-level-rise/flood impacted regulated-site layers into `climate_housing_infrastructure_assets`.
 
 `python/load_maine_town_boundaries.py` downloads official Census TIGER/Line Maine county-subdivision boundaries, loads them into `climate_housing_town_boundaries`, and exports `reports/climate_safe_housing_town_screening.geojson` for QGIS or web mapping.
+
+`python/build_climate_housing_map.py` creates a standalone Leaflet web map from the town screening GeoJSON with metric switching, county filtering, town search, popups, and ranked town lists.
 
 ## QGIS Automation
 
