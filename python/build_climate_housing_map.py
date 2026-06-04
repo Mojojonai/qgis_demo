@@ -196,16 +196,11 @@ def build_html(geojson: dict) -> str:
       color: var(--muted);
     }
     .detail {
-      position: absolute;
-      right: 18px;
-      top: 18px;
-      width: min(360px, calc(100% - 36px));
-      background: rgba(255,255,255,0.96);
+      margin: 14px 0;
+      background: #fbfcfd;
       border: 1px solid var(--line);
       border-radius: 6px;
       padding: 12px;
-      box-shadow: 0 10px 24px rgba(23, 32, 42, 0.16);
-      z-index: 2;
     }
     .detail-title {
       font-size: 15px;
@@ -223,8 +218,12 @@ def build_html(geojson: dict) -> str:
       padding: 5px 0;
       vertical-align: top;
     }
+    .detail-table td:first-child {
+      width: 42%;
+      color: var(--muted);
+    }
     .detail-table td:last-child {
-      text-align: right;
+      text-align: left;
       font-weight: 700;
       padding-left: 12px;
     }
@@ -298,14 +297,6 @@ def build_html(geojson: dict) -> str:
         grid-row: 1;
         min-height: 52vh;
       }
-      .detail {
-        left: 8px;
-        right: 8px;
-        top: 8px;
-        width: auto;
-        max-height: 38vh;
-        overflow: auto;
-      }
       .legend {
         right: 8px;
         bottom: 8px;
@@ -339,6 +330,9 @@ def build_html(geojson: dict) -> str:
         <div class="metric"><div class="label">Climate Assets</div><div class="value" id="assetCount">0</div></div>
       </div>
 
+      <div class="section-title">Town Profile</div>
+      <section class="detail" id="detailPanel"></section>
+
       <div class="section-title">Highest Ranked Towns</div>
       <div class="town-list" id="townList"></div>
 
@@ -348,7 +342,6 @@ def build_html(geojson: dict) -> str:
     </aside>
     <main class="map-shell">
       <svg id="mapSvg" viewBox="0 0 1000 720" role="img" aria-label="Maine town screening map"></svg>
-      <section class="detail" id="detailPanel"></section>
       <section class="legend" id="legend"></section>
     </main>
   </div>
