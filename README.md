@@ -157,7 +157,7 @@ The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_ar
 
 `python/load_maine_town_boundaries.py` downloads official Census TIGER/Line Maine county-subdivision boundaries, loads them into `climate_housing_town_boundaries`, and exports `reports/climate_safe_housing_town_screening.geojson` for QGIS or web mapping.
 
-`python/build_climate_housing_map.py` creates a standalone Leaflet web map from the town screening GeoJSON with metric switching, county filtering, town search, popups, and ranked town lists.
+`python/build_climate_housing_map.py` creates a dependency-free standalone HTML/SVG map from the town screening GeoJSON with metric switching, county filtering, town search, town detail panels, and ranked town lists.
 
 ## QGIS Automation
 
