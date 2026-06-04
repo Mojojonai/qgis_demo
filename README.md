@@ -74,6 +74,12 @@ To build the same-day climate-safe housing growth MVP:
 python python\build_climate_housing_mvp.py --config configs\project.toml --pdf
 ```
 
+To load the first live climate-housing infrastructure/exposure layers:
+
+```powershell
+python python\load_climate_open_data.py --config configs\project.toml
+```
+
 Report outputs:
 
 - `reports/transit_accessibility_report.html`
@@ -96,6 +102,7 @@ Report outputs:
 - `reports/climate_safe_housing_mvp_report.pdf`
 - `reports/climate_safe_housing_mvp_report.md`
 - `reports/climate_safe_housing_town_screening.csv`
+- `reports/climate_housing_data_ingestion_summary.md`
 - `reports/maine_focus_town_comparison.md`
 - `reports/maine_statewide_missing_needs_matrix.md`
 - `reports/maine_statewide_town_rankings.csv`
@@ -130,6 +137,8 @@ The government KPI report adds statewide screens for housing pressure, transport
 The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_areas_proposal.md](docs/climate_safe_housing_growth_areas_proposal.md) defines the next Maine-focused research project: flood risk, sea-level rise, infrastructure capacity, environmental constraints, housing need, and social vulnerability combined into a suitability and resilience-priority workflow.
 
 `python/build_climate_housing_mvp.py` creates the first same-day implementation of that project. It ranks Maine towns from the statewide ACS indicators already in PostGIS, writes `climate_housing_town_screening`, and generates MVP report/CSV outputs. The full parcel-level claim of climate-safe suitability is intentionally deferred until FEMA NFHL, Maine Geological Survey sea-level-rise/storm-surge, wetlands, conservation, DEM, roads, bridges, culverts, parcels, and zoning overlays are ingested.
+
+`python/load_climate_open_data.py` starts that ingestion by loading MaineDOT bridges, MaineDOT cross culverts, and Maine DEP sea-level-rise/flood impacted regulated-site layers into `climate_housing_infrastructure_assets`.
 
 ## QGIS Automation
 
