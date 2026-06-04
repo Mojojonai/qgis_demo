@@ -68,6 +68,12 @@ To build the future livability and investment report suite:
 python python\build_future_reports.py --config configs\project.toml --pdf
 ```
 
+To build the same-day climate-safe housing growth MVP:
+
+```powershell
+python python\build_climate_housing_mvp.py --config configs\project.toml --pdf
+```
+
 Report outputs:
 
 - `reports/transit_accessibility_report.html`
@@ -86,6 +92,10 @@ Report outputs:
 - `reports/maine_government_priority_kpi_report.pdf`
 - `reports/maine_government_priority_kpi_report.md`
 - `reports/maine_government_priority_kpi_rankings.csv`
+- `reports/climate_safe_housing_mvp_report.html`
+- `reports/climate_safe_housing_mvp_report.pdf`
+- `reports/climate_safe_housing_mvp_report.md`
+- `reports/climate_safe_housing_town_screening.csv`
 - `reports/maine_focus_town_comparison.md`
 - `reports/maine_statewide_missing_needs_matrix.md`
 - `reports/maine_statewide_town_rankings.csv`
@@ -118,6 +128,8 @@ The Greater Portland report keeps the detailed accessibility metrics from the Po
 The government KPI report adds statewide screens for housing pressure, transportation equity, aging in place, digital equity, workforce-support infrastructure, health access pressure, food/basic-needs pressure, child/family service demand, and climate-smart mobility opportunity. See [docs/government_kpi_framework.md](docs/government_kpi_framework.md) for KPI definitions.
 
 The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_areas_proposal.md](docs/climate_safe_housing_growth_areas_proposal.md) defines the next Maine-focused research project: flood risk, sea-level rise, infrastructure capacity, environmental constraints, housing need, and social vulnerability combined into a suitability and resilience-priority workflow.
+
+`python/build_climate_housing_mvp.py` creates the first same-day implementation of that project. It ranks Maine towns from the statewide ACS indicators already in PostGIS, writes `climate_housing_town_screening`, and generates MVP report/CSV outputs. The full parcel-level claim of climate-safe suitability is intentionally deferred until FEMA NFHL, Maine Geological Survey sea-level-rise/storm-surge, wetlands, conservation, DEM, roads, bridges, culverts, parcels, and zoning overlays are ingested.
 
 ## QGIS Automation
 
