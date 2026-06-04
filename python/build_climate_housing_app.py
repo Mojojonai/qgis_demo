@@ -10,6 +10,7 @@ from config import ensure_directories, load_config, resolve_path
 
 
 METRICS = {
+    "scenario_score": "Scenario Priority",
     "climate_safe_housing_mvp_score": "MVP Search Priority",
     "housing_need_score": "Housing Need",
     "social_vulnerability_score": "Social Vulnerability",
@@ -20,6 +21,7 @@ METRICS = {
 
 NUMERIC_FIELDS = [
     "acs_population",
+    "scenario_score",
     "climate_safe_housing_mvp_score",
     "housing_need_score",
     "social_vulnerability_score",
@@ -220,6 +222,22 @@ def build_html(payload: dict[str, Any]) -> str:
       color: var(--muted);
       font-size: 12px;
       line-height: 1.4;
+    }
+    .scenario-note {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcfd;
+      color: #34444f;
+      font-size: 11px;
+      line-height: 1.38;
+      padding: 9px;
+      margin: 8px 0 12px;
+    }
+    .scenario-note strong {
+      display: block;
+      color: var(--accent-dark);
+      font-size: 12px;
+      margin-bottom: 3px;
     }
     .control { margin: 11px 0; }
     label {
@@ -468,6 +486,18 @@ def build_html(payload: dict[str, Any]) -> str:
         <select id="metricSelect">__METRIC_OPTIONS__</select>
       </div>
       <div class="control">
+        <label for="scenarioSelect">Planning Scenario</label>
+        <select id="scenarioSelect">
+          <option value="balanced">Balanced statewide screen</option>
+          <option value="affordable_housing_first">Affordable housing first</option>
+          <option value="resilience_first">Resilience first</option>
+          <option value="infrastructure_growth">Infrastructure-efficient growth</option>
+          <option value="seasonal_stabilization">Seasonal market stabilization</option>
+          <option value="hazard_caution">Climate hazard caution</option>
+        </select>
+      </div>
+      <div class="scenario-note" id="scenarioNote"></div>
+      <div class="control">
         <label for="countySelect">County</label>
         <select id="countySelect"></select>
       </div>
@@ -481,6 +511,7 @@ def build_html(payload: dict[str, Any]) -> str:
       </div>
 
       <h2>KPI Filters</h2>
+      <div class="control"><label for="scenarioRange"><span>Min Scenario Priority</span><span id="scenarioValue">0</span></label><input id="scenarioRange" type="range" min="0" max="100" value="0"></div>
       <div class="control"><label for="mvpRange"><span>Min MVP</span><span id="mvpValue">0</span></label><input id="mvpRange" type="range" min="0" max="100" value="0"></div>
       <div class="control"><label for="housingRange"><span>Min Housing Need</span><span id="housingValue">0</span></label><input id="housingRange" type="range" min="0" max="100" value="0"></div>
       <div class="control"><label for="infraRange"><span>Min Infrastructure</span><span id="infraValue">0</span></label><input id="infraRange" type="range" min="0" max="100" value="0"></div>
@@ -523,7 +554,7 @@ def build_html(payload: dict[str, Any]) -> str:
       </div>
 
       <div class="chart-box">
-        <div class="chart-title">Housing Need vs MVP Priority</div>
+        <div class="chart-title" id="scatterTitle">Housing Need vs Active Layer</div>
         <svg id="scatterChart" viewBox="0 0 380 260" role="img" aria-label="Housing need scatter plot"></svg>
       </div>
 
@@ -554,12 +585,46 @@ def build_html(payload: dict[str, Any]) -> str:
       'Affordability and parcel screen': '#3f7d8f',
       'Monitor and screen after hazard layers': '#7a8791'
     };
+    const SCENARIOS = {
+      balanced: {
+        label: 'Balanced statewide screen',
+        description: 'Balances housing need, infrastructure efficiency, resilience priority, lower vulnerability, and lower sampled hazard exposure.',
+        weights: { housing: 0.30, infrastructure: 0.25, resilience: 0.20, lowVulnerability: 0.15, lowAsset: 0.10 }
+      },
+      affordable_housing_first: {
+        label: 'Affordable housing first',
+        description: 'Prioritizes high housing need while still rewarding infrastructure access and keeping climate exposure in view.',
+        weights: { housing: 0.50, infrastructure: 0.20, resilience: 0.15, lowVulnerability: 0.10, lowAsset: 0.05 }
+      },
+      resilience_first: {
+        label: 'Resilience first',
+        description: 'Surfaces communities where housing pressure overlaps vulnerability, recovery-capacity concerns, and sampled climate assets.',
+        weights: { resilience: 0.45, vulnerability: 0.25, housing: 0.20, assetSignal: 0.10 }
+      },
+      infrastructure_growth: {
+        label: 'Infrastructure-efficient growth',
+        description: 'Emphasizes places where housing screening can start near stronger existing service, commute, and digital-access proxies.',
+        weights: { infrastructure: 0.45, housing: 0.30, lowVulnerability: 0.15, lowAsset: 0.10 }
+      },
+      seasonal_stabilization: {
+        label: 'Seasonal market stabilization',
+        description: 'Highlights towns where seasonal or second-home pressure should be separated from year-round housing need.',
+        weights: { seasonal: 0.45, housing: 0.25, resilience: 0.15, vulnerability: 0.10, assetSignal: 0.05 }
+      },
+      hazard_caution: {
+        label: 'Climate hazard caution',
+        description: 'Rewards low sampled hazard exposure, lower vulnerability, infrastructure proxy, and housing need before any growth claim.',
+        weights: { lowAsset: 0.40, lowVulnerability: 0.20, infrastructure: 0.20, housing: 0.20 }
+      }
+    };
 
     let state = {
-      metric: 'climate_safe_housing_mvp_score',
+      metric: 'scenario_score',
+      scenario: 'balanced',
       county: 'All counties',
       action: 'All actions',
       search: '',
+      minScenario: 0,
       minMvp: 0,
       minHousing: 0,
       minInfra: 0,
@@ -596,6 +661,28 @@ def build_html(payload: dict[str, Any]) -> str:
       return feature;
     });
 
+    function recomputeScenarioScores() {
+      const scenario = SCENARIOS[state.scenario] || SCENARIOS.balanced;
+      for (const feature of features) {
+        const p = feature.properties;
+        const assetRisk = Math.min(100, Number(p.climate_asset_sample_count || 0) * 12);
+        const components = {
+          housing: Number(p.housing_need_score || 0),
+          infrastructure: Number(p.infrastructure_efficiency_proxy_score || 0),
+          resilience: Number(p.resilience_investment_priority_score || 0),
+          vulnerability: Number(p.social_vulnerability_score || 0),
+          lowVulnerability: Math.max(0, 100 - Number(p.social_vulnerability_score || 0)),
+          assetSignal: assetRisk,
+          lowAsset: Math.max(0, 100 - assetRisk),
+          seasonal: Math.min(100, Number(p.pct_seasonal_housing_units || 0))
+        };
+        const value = Object.entries(scenario.weights).reduce((sum, [key, weight]) => {
+          return sum + (components[key] || 0) * Number(weight || 0);
+        }, 0);
+        p.scenario_score = Math.round(value * 100) / 100;
+      }
+    }
+
     function escapeHtml(value) {
       return String(value ?? '')
         .replace(/&/g, '&amp;')
@@ -623,7 +710,8 @@ def build_html(payload: dict[str, Any]) -> str:
         const countyOk = state.county === 'All counties' || p.county === state.county;
         const actionOk = state.action === 'All actions' || p.primary_action === state.action;
         const textOk = !state.search || `${p.town} ${p.county} ${p.primary_action} ${p.secondary_signals}`.toLowerCase().includes(state.search);
-        const scoreOk = p.climate_safe_housing_mvp_score >= state.minMvp
+        const scoreOk = p.scenario_score >= state.minScenario
+          && p.climate_safe_housing_mvp_score >= state.minMvp
           && p.housing_need_score >= state.minHousing
           && p.infrastructure_efficiency_proxy_score >= state.minInfra
           && p.resilience_investment_priority_score >= state.minResilience
@@ -799,6 +887,14 @@ def build_html(payload: dict[str, Any]) -> str:
       `;
     }
 
+    function renderScenarioNote() {
+      const scenario = SCENARIOS[state.scenario] || SCENARIOS.balanced;
+      const weights = Object.entries(scenario.weights)
+        .map(([key, value]) => `${key.replace(/([A-Z])/g, ' $1')}: ${Math.round(value * 100)}%`)
+        .join(' | ');
+      document.getElementById('scenarioNote').innerHTML = `<strong>${escapeHtml(scenario.label)}</strong>${escapeHtml(scenario.description)}<br>${escapeHtml(weights)}`;
+    }
+
     function renderKpis(list) {
       const sorted = [...list].sort((a, b) => Number(b.properties[state.metric] || 0) - Number(a.properties[state.metric] || 0));
       const population = list.reduce((sum, feature) => sum + Number(feature.properties.acs_population || 0), 0);
@@ -832,6 +928,8 @@ def build_html(payload: dict[str, Any]) -> str:
         <span class="pill" style="background:${actionColor(p.primary_action)}">${escapeHtml(p.primary_action)}</span>
         <div class="profile-note">${escapeHtml(p.decision_note || '')}</div>
         <table class="detail-table">
+          ${detailRow('Planning scenario', (SCENARIOS[state.scenario] || SCENARIOS.balanced).label)}
+          ${detailRow('Scenario priority', format(p.scenario_score))}
           ${detailRow(METRICS[state.metric], format(p[state.metric]))}
           ${detailRow('MVP search priority', format(p.climate_safe_housing_mvp_score))}
           ${detailRow('Housing need', format(p.housing_need_score))}
@@ -899,6 +997,7 @@ def build_html(payload: dict[str, Any]) -> str:
     function renderScatter(list) {
       const chart = document.getElementById('scatterChart');
       chart.innerHTML = '';
+      document.getElementById('scatterTitle').textContent = `Housing Need vs ${METRICS[state.metric]}`;
       const margin = { left: 42, top: 16, right: 14, bottom: 34 };
       const w = 380 - margin.left - margin.right;
       const h = 260 - margin.top - margin.bottom;
@@ -909,7 +1008,7 @@ def build_html(payload: dict[str, Any]) -> str:
         <line x1="${margin.left}" y1="${margin.top + h}" x2="${margin.left + w}" y2="${margin.top + h}" stroke="#82919c" stroke-width="1"></line>
         <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + h}" stroke="#82919c" stroke-width="1"></line>
         <text x="${margin.left + w / 2}" y="252" font-size="10" text-anchor="middle" fill="#617080">Housing Need</text>
-        <text transform="translate(12 ${margin.top + h / 2}) rotate(-90)" font-size="10" text-anchor="middle" fill="#617080">MVP Priority</text>
+        <text transform="translate(12 ${margin.top + h / 2}) rotate(-90)" font-size="10" text-anchor="middle" fill="#617080">${escapeHtml(METRICS[state.metric])}</text>
       `;
       chart.appendChild(axis);
       [25, 50, 75].forEach((tick) => {
@@ -924,7 +1023,7 @@ def build_html(payload: dict[str, Any]) -> str:
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         const radius = Math.max(3, Math.min(8, Math.sqrt(p.acs_population || 1) / 36));
         circle.setAttribute('cx', x(p.housing_need_score));
-        circle.setAttribute('cy', y(p.climate_safe_housing_mvp_score));
+        circle.setAttribute('cy', y(p[state.metric]));
         circle.setAttribute('r', radius.toFixed(1));
         circle.setAttribute('fill', actionColor(p.primary_action));
         circle.setAttribute('fill-opacity', '0.78');
@@ -948,6 +1047,7 @@ def build_html(payload: dict[str, Any]) -> str:
     }
 
     function syncRangeLabels() {
+      document.getElementById('scenarioValue').textContent = state.minScenario;
       document.getElementById('mvpValue').textContent = state.minMvp;
       document.getElementById('housingValue').textContent = state.minHousing;
       document.getElementById('infraValue').textContent = state.minInfra;
@@ -956,6 +1056,8 @@ def build_html(payload: dict[str, Any]) -> str:
     }
 
     function renderAll() {
+      recomputeScenarioScores();
+      renderScenarioNote();
       syncRangeLabels();
       const list = filteredFeatures();
       if (state.selectedId && !list.some((feature) => feature.properties._id === state.selectedId)) {
@@ -976,9 +1078,11 @@ def build_html(payload: dict[str, Any]) -> str:
 
     renderControls();
     document.getElementById('metricSelect').addEventListener('change', (event) => { state.metric = event.target.value; renderAll(); });
+    document.getElementById('scenarioSelect').addEventListener('change', (event) => { state.scenario = event.target.value; renderAll(); });
     document.getElementById('countySelect').addEventListener('change', (event) => { state.county = event.target.value; renderAll(); });
     document.getElementById('actionSelect').addEventListener('change', (event) => { state.action = event.target.value; renderAll(); });
     document.getElementById('searchBox').addEventListener('input', (event) => { state.search = event.target.value.trim().toLowerCase(); renderAll(); });
+    document.getElementById('scenarioRange').addEventListener('input', (event) => { state.minScenario = Number(event.target.value); renderAll(); });
     document.getElementById('mvpRange').addEventListener('input', (event) => { state.minMvp = Number(event.target.value); renderAll(); });
     document.getElementById('housingRange').addEventListener('input', (event) => { state.minHousing = Number(event.target.value); renderAll(); });
     document.getElementById('infraRange').addEventListener('input', (event) => { state.minInfra = Number(event.target.value); renderAll(); });
@@ -986,10 +1090,12 @@ def build_html(payload: dict[str, Any]) -> str:
     document.getElementById('vulnerabilityRange').addEventListener('input', (event) => { state.maxVulnerability = Number(event.target.value); renderAll(); });
     document.getElementById('resetButton').addEventListener('click', () => {
       state = {
-        metric: 'climate_safe_housing_mvp_score',
+        metric: 'scenario_score',
+        scenario: 'balanced',
         county: 'All counties',
         action: 'All actions',
         search: '',
+        minScenario: 0,
         minMvp: 0,
         minHousing: 0,
         minInfra: 0,
@@ -998,9 +1104,11 @@ def build_html(payload: dict[str, Any]) -> str:
         selectedId: null
       };
       document.getElementById('metricSelect').value = state.metric;
+      document.getElementById('scenarioSelect').value = state.scenario;
       document.getElementById('countySelect').value = state.county;
       document.getElementById('actionSelect').value = state.action;
       document.getElementById('searchBox').value = '';
+      document.getElementById('scenarioRange').value = '0';
       document.getElementById('mvpRange').value = '0';
       document.getElementById('housingRange').value = '0';
       document.getElementById('infraRange').value = '0';

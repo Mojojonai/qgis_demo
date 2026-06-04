@@ -178,7 +178,7 @@ The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_ar
 
 `python/build_climate_policy_matrix.py` converts the town-level screen into action categories for policymakers: near-term housing search, resilience before or alongside growth, seasonal market stabilization, infrastructure capacity build-out, hazard-overlay-first review, and statewide monitoring.
 
-`python/build_climate_housing_app.py` builds a synchronized standalone dashboard app where KPI filters, policy-action categories, town search, map selection, profile details, action charts, scatter plots, and ranked tables all update together.
+`python/build_climate_housing_app.py` builds a synchronized standalone dashboard app where scenario-weighted planning modes, KPI filters, policy-action categories, town search, map selection, profile details, action charts, scatter plots, and ranked tables all update together.
 
 ## QGIS Automation
 
