@@ -94,8 +94,16 @@ def load_payload(cfg: dict[str, Any]) -> dict[str, Any]:
     return geojson
 
 
-def build_html(payload: dict[str, Any]) -> str:
+def load_candidate_grid(cfg: dict[str, Any]) -> dict[str, Any]:
+    path = resolve_path(cfg, "reports_dir") / "climate_housing_candidate_grid.geojson"
+    if not path.exists():
+        return {"type": "FeatureCollection", "metadata": {"feature_count": 0}, "features": []}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def build_html(payload: dict[str, Any], candidate_grid: dict[str, Any]) -> str:
     data = json.dumps(payload, separators=(",", ":"))
+    grid_data = json.dumps(candidate_grid, separators=(",", ":"))
     metrics = json.dumps(METRICS, separators=(",", ":"))
     metric_options = "\n".join(
         f'<option value="{key}">{label}</option>'
@@ -482,6 +490,13 @@ def build_html(payload: dict[str, Any]) -> str:
       <p class="subtitle">Synchronized town-level screening for housing need, resilience priority, climate asset review, infrastructure proxy, and policy action categories.</p>
 
       <div class="control">
+        <label for="geographySelect">Geography</label>
+        <select id="geographySelect">
+          <option value="towns">Town screening</option>
+          <option value="grid">Candidate grid suitability</option>
+        </select>
+      </div>
+      <div class="control">
         <label for="metricSelect">Map Layer</label>
         <select id="metricSelect">__METRIC_OPTIONS__</select>
       </div>
@@ -570,7 +585,8 @@ def build_html(payload: dict[str, Any]) -> str:
   <div class="tooltip" id="tooltip"></div>
 
   <script>
-    const DATA = __PAYLOAD__;
+    const TOWN_DATA = __PAYLOAD__;
+    const GRID_DATA = __GRID_PAYLOAD__;
     const METRICS = __METRICS__;
     const SVG_WIDTH = 1000;
     const SVG_HEIGHT = 720;
@@ -583,7 +599,12 @@ def build_html(payload: dict[str, Any]) -> str:
       'Seasonal market stabilization': '#9a6b23',
       'Infrastructure capacity build-out': '#655d8a',
       'Affordability and parcel screen': '#3f7d8f',
-      'Monitor and screen after hazard layers': '#7a8791'
+      'Monitor and screen after hazard layers': '#7a8791',
+      'strong candidate for parcel screening': '#1f7a5a',
+      'moderate candidate for parcel screening': '#3f7d8f',
+      'avoid or detailed hazard review': '#8f3b38',
+      'resilience before growth': '#24536b',
+      'monitor after full overlays': '#7a8791'
     };
     const SCENARIOS = {
       balanced: {
@@ -619,6 +640,7 @@ def build_html(payload: dict[str, Any]) -> str:
     };
 
     let state = {
+      geography: 'towns',
       metric: 'scenario_score',
       scenario: 'balanced',
       county: 'All counties',
@@ -636,9 +658,26 @@ def build_html(payload: dict[str, Any]) -> str:
 
     const svg = document.getElementById('mapSvg');
     const tooltip = document.getElementById('tooltip');
-    const features = DATA.features.map((feature, index) => {
+    function normalizeFeature(feature, index, geography) {
       const p = feature.properties;
       p._id = String(p._id || p.geoid || `${p.town}-${p.county}-${index}`);
+      if (geography === 'grid') {
+        p._id = String(p.unit_id || p._id);
+        p.primary_action = p.suitability_tier || 'monitor after full overlays';
+        p.secondary_signals = p.suitability_tier || 'candidate grid screening';
+        p.decision_note = p.review_notes || '';
+        p.climate_safe_housing_mvp_score = Number(p.climate_safe_suitability_score || 0);
+        p.infrastructure_efficiency_proxy_score = Number(p.infrastructure_access_score || 0);
+        p.resilience_investment_priority_score = Number(p.social_vulnerability_score || 0);
+        p.climate_asset_sample_count = Number((p.raw_properties || {}).climate_asset_count || 0);
+        p.pct_seasonal_housing_units = 0;
+        p.acs_population = Number((p.raw_properties || {}).acs_population || 0);
+        p.key_drivers = [
+          `flood exposure ${Number(p.flood_exposure_score || 0).toFixed(0)}`,
+          `environmental constraint ${Number(p.environmental_constraint_score || 0).toFixed(0)}`,
+          `infrastructure access ${Number(p.infrastructure_access_score || 0).toFixed(0)}`
+        ];
+      }
       for (const key of Object.keys(METRICS)) p[key] = Number(p[key] || 0);
       [
         'acs_population',
@@ -659,7 +698,11 @@ def build_html(payload: dict[str, Any]) -> str:
         'flood_site_sample_count'
       ].forEach((key) => { p[key] = Number(p[key] || 0); });
       return feature;
-    });
+    }
+
+    const townFeatures = TOWN_DATA.features.map((feature, index) => normalizeFeature(feature, index, 'towns'));
+    const gridFeatures = GRID_DATA.features.map((feature, index) => normalizeFeature(feature, index, 'grid'));
+    let features = townFeatures;
 
     function recomputeScenarioScores() {
       const scenario = SCENARIOS[state.scenario] || SCENARIOS.balanced;
@@ -907,7 +950,9 @@ def build_html(payload: dict[str, Any]) -> str:
       document.getElementById('avgMetric').textContent = format(avg);
       document.getElementById('highHousing').textContent = highHousing.toLocaleString();
       document.getElementById('assetTotal').textContent = Math.round(assets).toLocaleString();
-      document.getElementById('filterSummary').textContent = `${list.length.toLocaleString()} town(s) | ${METRICS[state.metric]}`;
+      const geographyLabel = state.geography === 'grid' ? 'candidate grid unit(s)' : 'town(s)';
+      document.getElementById('mapTitle').textContent = state.geography === 'grid' ? 'Candidate Grid Suitability Map' : 'Town Screening Map';
+      document.getElementById('filterSummary').textContent = `${list.length.toLocaleString()} ${geographyLabel} | ${METRICS[state.metric]}`;
       document.getElementById('metricHead').textContent = METRICS[state.metric];
     }
 
@@ -928,6 +973,10 @@ def build_html(payload: dict[str, Any]) -> str:
         <span class="pill" style="background:${actionColor(p.primary_action)}">${escapeHtml(p.primary_action)}</span>
         <div class="profile-note">${escapeHtml(p.decision_note || '')}</div>
         <table class="detail-table">
+          ${state.geography === 'grid' ? detailRow('Grid suitability tier', p.suitability_tier || '') : ''}
+          ${state.geography === 'grid' ? detailRow('Grid suitability score', format(p.climate_safe_suitability_score)) : ''}
+          ${state.geography === 'grid' ? detailRow('Flood exposure', format(p.flood_exposure_score)) : ''}
+          ${state.geography === 'grid' ? detailRow('Environmental constraint', format(p.environmental_constraint_score)) : ''}
           ${detailRow('Planning scenario', (SCENARIOS[state.scenario] || SCENARIOS.balanced).label)}
           ${detailRow('Scenario priority', format(p.scenario_score))}
           ${detailRow(METRICS[state.metric], format(p[state.metric]))}
@@ -1077,6 +1126,17 @@ def build_html(payload: dict[str, Any]) -> str:
     }
 
     renderControls();
+    document.getElementById('geographySelect').addEventListener('change', (event) => {
+      state.geography = event.target.value;
+      features = state.geography === 'grid' ? gridFeatures : townFeatures;
+      state.county = 'All counties';
+      state.action = 'All actions';
+      state.selectedId = null;
+      renderControls();
+      document.getElementById('countySelect').value = state.county;
+      document.getElementById('actionSelect').value = state.action;
+      renderAll();
+    });
     document.getElementById('metricSelect').addEventListener('change', (event) => { state.metric = event.target.value; renderAll(); });
     document.getElementById('scenarioSelect').addEventListener('change', (event) => { state.scenario = event.target.value; renderAll(); });
     document.getElementById('countySelect').addEventListener('change', (event) => { state.county = event.target.value; renderAll(); });
@@ -1090,6 +1150,7 @@ def build_html(payload: dict[str, Any]) -> str:
     document.getElementById('vulnerabilityRange').addEventListener('input', (event) => { state.maxVulnerability = Number(event.target.value); renderAll(); });
     document.getElementById('resetButton').addEventListener('click', () => {
       state = {
+        geography: 'towns',
         metric: 'scenario_score',
         scenario: 'balanced',
         county: 'All counties',
@@ -1103,6 +1164,9 @@ def build_html(payload: dict[str, Any]) -> str:
         maxVulnerability: 100,
         selectedId: null
       };
+      features = townFeatures;
+      renderControls();
+      document.getElementById('geographySelect').value = state.geography;
       document.getElementById('metricSelect').value = state.metric;
       document.getElementById('scenarioSelect').value = state.scenario;
       document.getElementById('countySelect').value = state.county;
@@ -1123,6 +1187,7 @@ def build_html(payload: dict[str, Any]) -> str:
 """
     return (
         html.replace("__PAYLOAD__", data)
+        .replace("__GRID_PAYLOAD__", grid_data)
         .replace("__METRICS__", metrics)
         .replace("__METRIC_OPTIONS__", metric_options)
     )
@@ -1132,8 +1197,9 @@ def write_app(config_path: str = "configs/project.toml") -> Path:
     cfg = load_config(config_path)
     ensure_directories(cfg)
     payload = load_payload(cfg)
+    candidate_grid = load_candidate_grid(cfg)
     path = resolve_path(cfg, "reports_dir") / "climate_housing_intelligence_app.html"
-    path.write_text(build_html(payload), encoding="utf-8")
+    path.write_text(build_html(payload, candidate_grid), encoding="utf-8")
     return path
 
 

@@ -110,9 +110,9 @@ CREATE INDEX IF NOT EXISTS idx_climate_housing_town_boundaries_town
 CREATE INDEX IF NOT EXISTS idx_climate_housing_town_screening_town
     ON climate_housing_town_screening (lower(town), lower(county));
 
-COMMENT ON TABLE climate_housing_hazard_zones IS 'Future-ingest table for FEMA NFHL, Maine Geological Survey sea-level-rise/storm-surge, riverine flood, and related hazard zones.';
-COMMENT ON TABLE climate_housing_environmental_constraints IS 'Future-ingest table for wetlands, conserved lands, shoreland zones, habitat, steep-slope masks, and related development constraints.';
-COMMENT ON TABLE climate_housing_infrastructure_assets IS 'Future-ingest table for roads, bridges, culverts, wastewater, water, critical facilities, broadband, and other infrastructure assets.';
+COMMENT ON TABLE climate_housing_hazard_zones IS 'Authoritative and future-ingest hazard polygons including FEMA NFHL, Maine Geological Survey sea-level-rise/storm-surge, riverine flood, and related zones.';
+COMMENT ON TABLE climate_housing_environmental_constraints IS 'Authoritative and future-ingest environmental polygons including wetlands, conserved lands, shoreland zones, habitat, and steep-slope masks.';
+COMMENT ON TABLE climate_housing_infrastructure_assets IS 'Infrastructure and exposed-site assets including roads, bridges, culverts, wastewater, water, critical facilities, broadband, and related systems.';
 COMMENT ON TABLE climate_housing_candidate_units IS 'Parcel, grid-cell, or tract-level candidate units for full climate-safe housing suitability modeling.';
 COMMENT ON TABLE climate_housing_town_boundaries IS 'Official U.S. Census TIGER/Line county subdivision boundaries for Maine, used to map town-level screening scores.';
 COMMENT ON TABLE climate_housing_town_screening IS 'Town-level same-day MVP screening scores built from statewide ACS indicators before parcel/hazard overlay ingestion.';

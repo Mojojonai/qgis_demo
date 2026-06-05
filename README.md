@@ -74,10 +74,24 @@ To build the same-day climate-safe housing growth MVP:
 python python\build_climate_housing_mvp.py --config configs\project.toml --pdf
 ```
 
+To run the complete climate-housing release in dependency order:
+
+```powershell
+python python\run_climate_housing_pipeline.py --config configs\project.toml
+```
+
+Use `--skip-downloads` to rebuild every report, map, app, and validation result from the spatial data already loaded in PostGIS.
+
 To load the first live climate-housing infrastructure/exposure layers:
 
 ```powershell
 python python\load_climate_open_data.py --config configs\project.toml
+```
+
+To load FEMA flood zones, Maine conserved lands, and NWI wetland constraints:
+
+```powershell
+python python\load_climate_constraints.py --config configs\project.toml
 ```
 
 To load Maine town boundaries and export a map-ready climate-housing GeoJSON:
@@ -102,6 +116,18 @@ To build the synchronized climate-safe housing intelligence app:
 
 ```powershell
 python python\build_climate_housing_app.py --config configs\project.toml
+```
+
+To build the statewide candidate grid suitability model:
+
+```powershell
+python python\build_climate_candidate_grid.py --config configs\project.toml --pdf
+```
+
+To run the technical quality gate:
+
+```powershell
+python python\validate_climate_housing_outputs.py --config configs\project.toml
 ```
 
 Report outputs:
@@ -133,7 +159,15 @@ Report outputs:
 - `reports/climate_housing_policy_decision_matrix.md`
 - `reports/climate_housing_policy_decision_matrix.csv`
 - `reports/climate_housing_intelligence_app.html`
+- `reports/climate_housing_candidate_grid.csv`
+- `reports/climate_housing_candidate_grid.geojson`
+- `reports/climate_housing_candidate_grid_report.html`
+- `reports/climate_housing_candidate_grid_report.pdf`
+- `reports/climate_housing_candidate_grid_report.md`
 - `reports/climate_housing_data_ingestion_summary.md`
+- `reports/climate_housing_constraint_ingestion_summary.md`
+- `reports/climate_housing_validation_report.md`
+- `reports/climate_housing_12_week_completion_audit.md`
 - `reports/climate_housing_town_boundary_summary.md`
 - `reports/maine_focus_town_comparison.md`
 - `reports/maine_statewide_missing_needs_matrix.md`
@@ -172,6 +206,8 @@ The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_ar
 
 `python/load_climate_open_data.py` starts that ingestion by loading MaineDOT bridges, MaineDOT cross culverts, and Maine DEP sea-level-rise/flood impacted regulated-site layers into `climate_housing_infrastructure_assets`.
 
+`python/load_climate_constraints.py` clips authoritative FEMA NFHL, Maine GeoLibrary conserved-land, and U.S. Fish and Wildlife Service NWI wetland services to Maine, cleans polygon geometry, loads the hazard/environment tables, preserves source attributes, and records service errors without discarding successful sources.
+
 `python/load_maine_town_boundaries.py` downloads official Census TIGER/Line Maine county-subdivision boundaries, loads them into `climate_housing_town_boundaries`, and exports `reports/climate_safe_housing_town_screening.geojson` for QGIS or web mapping.
 
 `python/build_climate_housing_map.py` creates a dependency-free standalone HTML/SVG map from the town screening GeoJSON with metric switching, county filtering, town search, town detail panels, and ranked town lists.
@@ -179,6 +215,8 @@ The climate-safe housing growth proposal in [docs/climate_safe_housing_growth_ar
 `python/build_climate_policy_matrix.py` converts the town-level screen into action categories for policymakers: near-term housing search, resilience before or alongside growth, seasonal market stabilization, infrastructure capacity build-out, hazard-overlay-first review, and statewide monitoring.
 
 `python/build_climate_housing_app.py` builds a synchronized standalone dashboard app where scenario-weighted planning modes, KPI filters, policy-action categories, town search, map selection, profile details, action charts, scatter plots, and ranked tables all update together.
+
+`python/build_climate_candidate_grid.py` builds a statewide 5 km candidate grid in PostGIS, measures hazard and environmental polygon overlap area, scores each unit for planning-grade climate-safe housing suitability, exports GeoJSON/CSV, and writes a report. The grid model is a bridge from town-level screening toward future parcel or 250 m grid suitability analysis.
 
 ## QGIS Automation
 

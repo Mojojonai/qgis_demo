@@ -11,6 +11,7 @@ reports/*.png
 !reports/maine_government_priority_kpi_report.pdf
 !reports/climate_safe_housing_mvp_report.pdf
 !reports/climate_housing_policy_decision_matrix.pdf
+!reports/climate_housing_candidate_grid_report.pdf
 !reports/transit_accessibility_map.pdf
 !reports/transit_accessibility_map.png
 qgis/*.qgz

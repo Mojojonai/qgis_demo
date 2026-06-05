@@ -4,5 +4,7 @@ sql/*.sql linguist-language=SQL linguist-detectable=true
 # Keep committed datasets and report artifacts from dominating the language bar.
 data/raw/*.geojson linguist-generated=true
 reports/*.html linguist-generated=true
+reports/*.geojson linguist-generated=true
+reports/*.csv linguist-generated=true
 reports/*.pdf binary linguist-generated=true
 reports/*.png binary linguist-generated=true

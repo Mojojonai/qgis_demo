@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Climate-Safe Housing Candidate Grid Model</title>
+  <style>
+    @page { size: Letter; margin: 0.55in; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #1f2933; line-height: 1.45; margin: 0 auto; max-width: 1080px; padding: 24px; }
+    h1 { font-size: 28px; margin: 0 0 12px; color: #123f5f; }
+    h2 { font-size: 18px; color: #135c88; border-bottom: 1px solid #d7dde5; padding-bottom: 4px; margin-top: 24px; }
+    h3 { font-size: 14px; color: #1f2933; margin-top: 18px; }
+    p, li { font-size: 11.5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 10px; margin: 10px 0 16px; }
+    th, td { border: 1px solid #d7dde5; padding: 6px; text-align: left; vertical-align: top; }
+    th { background: #e9f0f7; }
+    tr:nth-child(even) td { background: #fbfcfe; }
+  </style>
+</head>
+<body>
+  <h1>Climate-Safe Housing Candidate Grid Model</h1><h2>What This Adds</h2><p>This model converts Maine town screening results into statewide 5 km planning grid units. Each grid cell inherits town-level housing need, social vulnerability, and infrastructure proxy scores, then adds exposure signals from loaded hazard zones, environmental constraints, and nearby climate/infrastructure assets.</p><p>The result is a first grid-level suitability screen. It is more spatially explicit than town rankings, but it is not a parcel suitability determination. This build includes bounded FEMA NFHL polygons, the queryable Maine conserved-land service, and climate/infrastructure assets. Complete FEMA and NWI coverage, Maine Geological Survey inundation, DEM/slope, zoning, water/wastewater, and parcels are still required before final build/no-build decisions.</p><h2>Model Formula</h2><table><thead><tr><th>Component</th><th>Weight</th><th>Meaning</th></tr></thead><tbody><tr><td>Housing need</td><td>30%</td><td>Prioritizes places where housing pressure is visible.</td></tr>
+<tr><td>Infrastructure access proxy</td><td>30%</td><td>Rewards locations in towns with stronger service/access indicators and nearby road structures.</td></tr>
+<tr><td>Low flood exposure</td><td>20%</td><td>Penalizes loaded flood/SLR hazard and exposed-asset signals.</td></tr>
+<tr><td>Low environmental constraint</td><td>10%</td><td>Penalizes loaded wetland/conservation/environmental constraint intersections.</td></tr>
+<tr><td>Lower social vulnerability</td><td>10%</td><td>Avoids treating highly vulnerable communities as simple growth targets without safeguards.</td></tr></tbody></table><h2>Output Snapshot</h2><table><thead><tr><th>KPI</th><th>Value</th></tr></thead><tbody><tr><td>Candidate grid units in PostGIS</td><td>4,800</td></tr>
+<tr><td>Grid units exported to GeoJSON</td><td>4,800</td></tr>
+<tr><td>Strong candidate units</td><td>173</td></tr>
+<tr><td>Moderate candidate units</td><td>3,877</td></tr>
+<tr><td>Avoid or detailed hazard review units</td><td>42</td></tr>
+<tr><td>Resilience-before-growth units</td><td>0</td></tr>
+<tr><td>Loaded hazard polygons</td><td>1,000</td></tr>
+<tr><td>Loaded environmental constraints</td><td>156</td></tr>
+<tr><td>Loaded infrastructure/exposed assets</td><td>1,188</td></tr></tbody></table><h2>Loaded Spatial Evidence</h2><table><thead><tr><th>Role</th><th>Source</th><th>Features In PostGIS</th></tr></thead><tbody><tr><td>environmental constraint</td><td>Maine GeoLibrary Conserved Lands</td><td>156</td></tr>
+<tr><td>hazard polygon</td><td>FEMA National Flood Hazard Layer</td><td>1,000</td></tr>
+<tr><td>infrastructure/exposed asset</td><td>Maine DEP Sea Level Rise Study</td><td>688</td></tr>
+<tr><td>infrastructure/exposed asset</td><td>MaineDOT OpenData - Bridges</td><td>250</td></tr>
+<tr><td>infrastructure/exposed asset</td><td>MaineDOT OpenData - Cross Culverts</td><td>250</td></tr></tbody></table><h2>Suitability Tier Counts</h2><table><thead><tr><th>Tier</th><th>Grid Units</th></tr></thead><tbody><tr><td>moderate candidate for parcel screening</td><td>3,877</td></tr>
+<tr><td>monitor after full overlays</td><td>708</td></tr>
+<tr><td>strong candidate for parcel screening</td><td>173</td></tr>
+<tr><td>avoid or detailed hazard review</td><td>42</td></tr></tbody></table><h2>Highest Scoring Candidate Grid Units</h2><table><thead><tr><th>Grid Unit</th><th>Town</th><th>County</th><th>Score</th><th>Tier</th><th>Flood</th><th>Env</th><th>Infra</th><th>Housing</th><th>Vulnerability</th></tr></thead><tbody><tr><td>grid5km_2300560545_2478</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2372</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2587</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2481</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2479</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2693</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2480</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2586</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2053</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2371</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2373</td><td>Portland</td><td>Cumberland</td><td>81.20</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2374</td><td>Portland</td><td>Cumberland</td><td>78.60</td><td>strong candidate for parcel screening</td><td>16.00</td><td>0.00</td><td>86.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300138740_2168</td><td>Lewiston</td><td>Androscoggin</td><td>75.32</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>66.55</td><td>70.39</td><td>57.61</td></tr>
+<tr><td>grid5km_2300138740_2061</td><td>Lewiston</td><td>Androscoggin</td><td>74.96</td><td>strong candidate for parcel screening</td><td>4.78</td><td>0.00</td><td>68.55</td><td>70.39</td><td>57.61</td></tr>
+<tr><td>grid5km_2300138740_1955</td><td>Lewiston</td><td>Androscoggin</td><td>74.16</td><td>strong candidate for parcel screening</td><td>8.78</td><td>0.00</td><td>68.55</td><td>70.39</td><td>57.61</td></tr>
+<tr><td>grid5km_2300330690_3741</td><td>Hamlin</td><td>Aroostook</td><td>73.94</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>63.96</td><td>70.50</td><td>64.00</td></tr>
+<tr><td>grid5km_2300138740_2167</td><td>Lewiston</td><td>Androscoggin</td><td>73.40</td><td>strong candidate for parcel screening</td><td>3.62</td><td>0.00</td><td>62.55</td><td>70.39</td><td>57.61</td></tr>
+<tr><td>grid5km_2300138740_2060</td><td>Lewiston</td><td>Androscoggin</td><td>73.33</td><td>strong candidate for parcel screening</td><td>6.97</td><td>0.00</td><td>64.55</td><td>70.39</td><td>57.61</td></tr>
+<tr><td>grid5km_2300138740_2062</td><td>Lewiston</td><td>Androscoggin</td><td>73.29</td><td>strong candidate for parcel screening</td><td>10.14</td><td>0.00</td><td>66.55</td><td>70.39</td><td>57.61</td></tr>
+<tr><td>grid5km_2301902795_3796</td><td>Bangor</td><td>Penobscot</td><td>72.97</td><td>strong candidate for parcel screening</td><td>0.00</td><td>0.00</td><td>61.89</td><td>66.36</td><td>55.07</td></tr></tbody></table><h2>Grid Units Requiring Avoidance Or Detailed Hazard Review</h2><table><thead><tr><th>Grid Unit</th><th>Town</th><th>County</th><th>Score</th><th>Tier</th><th>Flood</th><th>Env</th><th>Infra</th><th>Housing</th><th>Vulnerability</th></tr></thead><tbody><tr><td>grid5km_2300560545_2266</td><td>Portland</td><td>Cumberland</td><td>65.80</td><td>avoid or detailed hazard review</td><td>80.00</td><td>0.00</td><td>86.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2265</td><td>Portland</td><td>Cumberland</td><td>65.20</td><td>avoid or detailed hazard review</td><td>80.00</td><td>0.00</td><td>84.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2051</td><td>Portland</td><td>Cumberland</td><td>63.20</td><td>avoid or detailed hazard review</td><td>96.00</td><td>0.00</td><td>88.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2158</td><td>Portland</td><td>Cumberland</td><td>62.40</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>88.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2159</td><td>Portland</td><td>Cumberland</td><td>62.40</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>88.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300560545_2052</td><td>Portland</td><td>Cumberland</td><td>62.40</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>88.36</td><td>67.34</td><td>43.12</td></tr>
+<tr><td>grid5km_2300571990_2158</td><td>South Portland</td><td>Cumberland</td><td>54.13</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>69.01</td><td>56.97</td><td>36.60</td></tr>
+<tr><td>grid5km_2301902795_3901</td><td>Bangor</td><td>Penobscot</td><td>53.77</td><td>avoid or detailed hazard review</td><td>96.00</td><td>0.00</td><td>61.89</td><td>66.36</td><td>55.07</td></tr>
+<tr><td>grid5km_2300571990_2265</td><td>South Portland</td><td>Cumberland</td><td>53.73</td><td>avoid or detailed hazard review</td><td>96.00</td><td>0.00</td><td>65.01</td><td>56.97</td><td>36.60</td></tr>
+<tr><td>grid5km_2300571990_2051</td><td>South Portland</td><td>Cumberland</td><td>53.53</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>67.01</td><td>56.97</td><td>36.60</td></tr>
+<tr><td>grid5km_2301506120_3021</td><td>Boothbay Harbor</td><td>Lincoln</td><td>53.27</td><td>avoid or detailed hazard review</td><td>80.00</td><td>0.00</td><td>44.29</td><td>73.17</td><td>59.66</td></tr>
+<tr><td>grid5km_2301363660_3780</td><td>Rockport</td><td>Knox</td><td>53.20</td><td>avoid or detailed hazard review</td><td>88.00</td><td>0.00</td><td>53.33</td><td>59.63</td><td>30.88</td></tr>
+<tr><td>grid5km_2301363590_3778</td><td>Rockland</td><td>Knox</td><td>50.82</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>58.49</td><td>59.93</td><td>47.11</td></tr>
+<tr><td>grid5km_2301186515_2608</td><td>Winslow</td><td>Kennebec</td><td>50.55</td><td>avoid or detailed hazard review</td><td>80.00</td><td>0.00</td><td>47.58</td><td>54.58</td><td>41.03</td></tr>
+<tr><td>grid5km_2300582105_1945</td><td>Westbrook</td><td>Cumberland</td><td>50.38</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>61.29</td><td>51.15</td><td>33.55</td></tr>
+<tr><td>grid5km_2300582105_2052</td><td>Westbrook</td><td>Cumberland</td><td>50.38</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>61.29</td><td>51.15</td><td>33.55</td></tr>
+<tr><td>grid5km_2303164675_1940</td><td>Saco</td><td>York</td><td>50.37</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>58.81</td><td>53.19</td><td>32.27</td></tr>
+<tr><td>grid5km_2300972865_4962</td><td>Southwest Harbor</td><td>Hancock</td><td>50.29</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>45.18</td><td>70.39</td><td>43.84</td></tr>
+<tr><td>grid5km_2301102100_2496</td><td>Augusta</td><td>Kennebec</td><td>50.18</td><td>avoid or detailed hazard review</td><td>100.00</td><td>0.00</td><td>54.05</td><td>65.03</td><td>55.44</td></tr>
+<tr><td>grid5km_2301309725_3780</td><td>Camden</td><td>Knox</td><td>49.49</td><td>avoid or detailed hazard review</td><td>96.00</td><td>0.00</td><td>53.28</td><td>56.19</td><td>41.54</td></tr></tbody></table><h2>Resilience-Before-Growth Grid Units</h2><table><thead><tr><th>Grid Unit</th><th>Town</th><th>County</th><th>Score</th><th>Tier</th><th>Flood</th><th>Env</th><th>Infra</th><th>Housing</th><th>Vulnerability</th></tr></thead><tbody></tbody></table><h2>County Portfolio Summary</h2><table><thead><tr><th>County</th><th>Grid Units</th><th>Avg Score</th><th>Strong Candidates</th><th>Hazard Review</th></tr></thead><tbody><tr><td>Cumberland</td><td>297</td><td>65.74</td><td>33</td><td>11</td></tr>
+<tr><td>York</td><td>306</td><td>64.32</td><td>26</td><td>3</td></tr>
+<tr><td>Hancock</td><td>421</td><td>64.32</td><td>24</td><td>4</td></tr>
+<tr><td>Androscoggin</td><td>127</td><td>63.51</td><td>19</td><td>1</td></tr>
+<tr><td>Aroostook</td><td>628</td><td>61.95</td><td>19</td><td>1</td></tr>
+<tr><td>Penobscot</td><td>526</td><td>61.96</td><td>17</td><td>2</td></tr>
+<tr><td>Knox</td><td>227</td><td>63.97</td><td>15</td><td>9</td></tr>
+<tr><td>Kennebec</td><td>236</td><td>64.11</td><td>11</td><td>2</td></tr>
+<tr><td>Franklin</td><td>219</td><td>61.57</td><td>9</td><td>0</td></tr>
+<tr><td>Sagadahoc</td><td>94</td><td>63.33</td><td>0</td><td>2</td></tr>
+<tr><td>Waldo</td><td>228</td><td>63.01</td><td>0</td><td>0</td></tr>
+<tr><td>Washington</td><td>443</td><td>62.26</td><td>0</td><td>3</td></tr>
+<tr><td>Oxford</td><td>357</td><td>62.09</td><td>0</td><td>0</td></tr>
+<tr><td>Lincoln</td><td>179</td><td>62.04</td><td>0</td><td>4</td></tr>
+<tr><td>Somerset</td><td>325</td><td>60.62</td><td>0</td><td>0</td></tr>
+<tr><td>Piscataquis</td><td>187</td><td>60.61</td><td>0</td><td>0</td></tr></tbody></table><h2>How To Use This Output</h2><ul><li>Use strong and moderate candidate grid units to choose where parcel screening should start.</li></ul><ul><li>Use avoid/review units as a warning layer, not as a final legal restriction.</li></ul><ul><li>Use resilience-before-growth units to prioritize infrastructure, anti-displacement, emergency access, and recovery-capacity investment.</li></ul><ul><li>Use the GeoJSON in QGIS or the web app as a planning overlay with the existing town-screening outputs.</li></ul><h2>Next Precision Step</h2><p>Replace the 5 km grid with parcel or 250 m grid cells in pilot towns after full hazard, wetlands, conservation, DEM/slope, zoning, roads, bridges, culverts, water/wastewater, and parcel layers are loaded.</p>
+</body>
+</html>

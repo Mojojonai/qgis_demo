@@ -281,7 +281,8 @@ def write_summary(cfg: dict[str, Any], counts: dict[str, int], max_features: int
         "- Loaded MaineDOT bridges and cross culverts as infrastructure assets.",
         "- Loaded Maine DEP regulated-site exposure layers for 1.6 ft, 3.9 ft, and 8.8 ft sea-level-rise scenarios plus 100-year and 500-year flood exposure groups where the service provides queryable features.",
         "- This run is a smoke-test/sample run when a feature cap is shown above. Re-run without `--max-features` for the full source load.",
-        "- FEMA NFHL polygon overlays, Maine Geological Survey inundation polygons, NWI wetlands, conservation lands, DEM slope/elevation, parcels, and zoning are still the next ingestion targets.",
+        "- FEMA NFHL and Maine conserved-land polygons are handled by `python/load_climate_constraints.py`; its audit records any public-service failures such as the current NWI timeout.",
+        "- Maine Geological Survey inundation polygons, complete NWI wetlands, DEM slope/elevation, parcels, zoning, and water/wastewater capacity remain precision-layer ingestion targets.",
         "",
     ])
     path.write_text("\n".join(lines), encoding="utf-8")
